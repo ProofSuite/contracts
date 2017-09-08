@@ -12,7 +12,6 @@ import './ProofPresaleToken.sol';
  * Based on code by FirstBlood:
  * https://github.com/Firstbloodio/token/blob/master/smart_contract/FirstBloodToken.sol
  */
-
 contract ProofToken is ERC20, Ownable {
 
   using SafeMath for uint256;
@@ -21,18 +20,26 @@ contract ProofToken is ERC20, Ownable {
 
   mapping(address => uint) balances;
   mapping (address => mapping (address => uint)) allowed;
-  mapping (address => bool) claimed;
+  mapping (address => bool) public claimed;
+
 
   string public constant name = "Proof Token";
   string public constant symbol = "PRFT";
   uint8 public constant decimals = 18;
   bool public mintingFinished = false;
 
+  uint256 public constant TOKENS_ALLOCATED_TO_PROOF = 1181031 * (10 ** 18);
+
   event Mint(address indexed to, uint256 amount);
   event MintFinished();
 
-  function ProofToken(address _presaleTokenAddress) {
+  function ProofToken(address _presaleTokenAddress, address _proofWalletAddress) {
+
     presaleToken = ProofPresaleToken(_presaleTokenAddress);
+    totalSupply = presaleToken.totalSupply();
+
+    balances[_proofWalletAddress] = balances[_proofWalletAddress].add(TOKENS_ALLOCATED_TO_PROOF);
+    totalSupply = totalSupply.add(TOKENS_ALLOCATED_TO_PROOF);
   }
 
   function() payable {
@@ -84,7 +91,6 @@ contract ProofToken is ERC20, Ownable {
     return true;
   }
 
-
   modifier canMint() {
     require(!mintingFinished);
     _;
@@ -114,6 +120,4 @@ contract ProofToken is ERC20, Ownable {
     MintFinished();
     return true;
   }
-
-
 }

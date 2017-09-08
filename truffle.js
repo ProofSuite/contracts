@@ -1,7 +1,7 @@
 // Allows us to use ES6 in our migrations and tests.
 // Not quite sure this is necessary
-require('babel-register');
-require('babel-polyfill');
+require('babel-register')
+require('babel-polyfill')
 
 module.exports = {
   networks: {
