@@ -1,3 +1,7 @@
+/**
+ * @module Helpers
+ */
+
 var Promise = require('bluebird')
 let chai = require('chai')
 var chaiAsPromised = require('chai-as-promised')
@@ -6,9 +10,9 @@ chai.should()
 chai.use(chaiAsPromised)
 
 /**
- * @description
- * @param txnHashes
- * @returns
+ * @description Returns a promise that is resolve when transactions corresponding to input hashes are resolved
+ * @param txnHashes {String[]}
+ * @returns Promise resolved upon mining of all input transaction {Promise}
  */
 const waitUntilTransactionsMined = (txnHashes) => {
   var transactionReceiptAsync
@@ -40,9 +44,9 @@ const waitUntilTransactionsMined = (txnHashes) => {
 }
 
 /**
- * @description
- * @param address
- * @returns
+ * @description Returns the balance of an ethereum wallet
+ * @param address {String} - Ethereum address
+ * @returns wallet balance {Number}
  */
 const getBalance = (address) => {
   let balance = web3.eth.getBalance(address)
@@ -50,9 +54,9 @@ const getBalance = (address) => {
 }
 
 /**
- * @description
- * @param addresses
- * @returns
+ * @description Returns the balance of several ethereum wallets (in wei)
+ * @param addresses {String[]} - Array of ethereum addresses
+ * @returns wallet balances (in wei) {Number[]}
  */
 const getBalances = (addresses) => {
   let balances = []
@@ -61,9 +65,9 @@ const getBalances = (addresses) => {
 }
 
 /**
- * @description
- * @param address
- * @returns
+ * @description Returns the balance of an ethereum wallet (in ether)
+ * @param address {String} - Ethereum address
+ * @returns wallet balance (in ether) {Number}
  */
 const getEtherBalance = (address) => {
   let balance = web3.fromWei(web3.eth.getBalance(address), 'ether')
@@ -71,9 +75,9 @@ const getEtherBalance = (address) => {
 }
 
 /**
- * @description
- * @param addresses
- * @returns
+ * @description Returns the balance of several ethereum wallets (in ether)
+ * @param addresses {String[]}
+ * @returns wallet balances (in ether) {Number[]}
  */
 const getEtherBalances = (addresses) => {
   let balances = []
@@ -82,87 +86,57 @@ const getEtherBalances = (addresses) => {
 }
 
 /**
- * @description
- * @param amountInWei
- * @returns
+ * @description Converts wei to ether
+ * @param valueInWei {Number}
+ * @returns valueInEther {Number}
  */
-const inEther = (amountInWei) => {
-  let amount = web3.fromWei(amountInWei, 'ether')
+const inEther = (valueInWei) => {
+  let amount = web3.fromWei(valueInWei, 'ether')
   return Number(amount)
 }
 
 /**
- * @description
- * @param amountInEther
- * @returns
+ * @description Converts ether to wei
+ * @param valueInEther {Number}
+ * @returns valueInWei {Number}
  */
-const inWei = (amountInEther) => {
-  let amount = web3.toWei(amountInEther, 'ether')
+const inWei = (valueInEther) => {
+  let amount = web3.toWei(valueInEther, 'ether')
   return amount.toNumber()
 }
 
 // in our case the base units are cents
 /**
- * @description
- * @param tokens
- * @returns
+ * @description Convert tokens cents to token units
+ * @param tokenCents {Number}
+ * @returns token base units {Number}
  */
-const inBaseUnits = (tokens) => {
-  return tokens * (10 ** 2)
+const inBaseUnits = (tokenCents) => {
+  return tokenCents / (10 ** 2)
 }
 
 /**
- * @description
- * @param tokens
- * @returns
+ * @description Converts token units to token cents
+ * @param tokenBaseUnits {Number}
+ * @returns token cents {Number}
  */
-const inCents = (tokens) => {
-  return tokens * (10 ** 2)
+const inCents = (tokenBaseUnits) => {
+  return tokenBaseUnits * (10 ** 2)
 }
 
 /**
- * @description
- * @param tokenBaseUnits
- * @returns
+ * @description Converts token base units (ERC20 units) to token units
+ * @param tokenBaseUnits {Number}
+ * @returns token units {Number}
  */
-const inTOKEN_UNITS = (tokenBaseUnits) => {
+const inTokenUnits = (tokenBaseUnits) => {
   return tokenBaseUnits / (10 ** 18)
 }
 
 /**
- * @description
- * @param contract
- * @param params
- * @returns
- */
-const deployContract = async (contract, params) => {
-  let deployedContract;
-
-  if (params) {
-    deployedContract = await contract.new(...params)
-  } else {
-    deployedContract = await contract.new()
-  }
-  return deployedContract
-}
-
-/**
- * @description
- * @param contracts
- * @returns
- */
-const deployContracts = async (contracts) => {
-  let results = await Promise.map(contracts, function (contract) {
-    return contract.new()
-  })
-
-  return results
-}
-
-/**
- * @description
- * @param contract
- * @returns
+ * @description Returns address corresponding to a contract
+ * @param contract {Object} - Truffle Contract Object
+ * @returns address {String}
  */
 const getAddress = async (contract) => {
   let address = contract.address
@@ -170,9 +144,9 @@ const getAddress = async (contract) => {
 }
 
 /**
- * @description
- * @param contracts
- * @returns
+ * @description Returns the addresses corresponding to an array of contracts
+ * @param contracts {Object} Array of truffle contract objects
+ * @returns address[] {String[]}
  */
 const getAddresses = async (contracts) => {
   let addresses = contracts.map(function (contract) {
@@ -182,9 +156,9 @@ const getAddresses = async (contracts) => {
 }
 
 /**
- * @description
- * @param txn
- * @returns
+ * @description Send an ethereum transaction and wait until the transaction is mined
+ * @param txn {Object} Web3 transaction object
+ * @returns txnReceipt {Object} transaction receipt
  */
 const sendTransaction = async (txn) => {
   let txnHash = await web3.eth.sendTransaction(txn)
@@ -193,9 +167,9 @@ const sendTransaction = async (txn) => {
 }
 
 /**
- * @description
- * @param txns
- * @returns
+ * @description Send ethereum transactions and wait until all transactions are mined
+ * @param txns {Object} Web3 transactions object
+ * @returns txnReceipts {Object} transaction receipts
  */
 const sendTransactions = async (txns) => {
   let txnHashes = []
@@ -210,7 +184,7 @@ const sendTransactions = async (txns) => {
 }
 
 /**
- * @description
+ * @description Fails if the input promise is not rejected with an Invalid opcode message
  * @param promise
  */
 const expectInvalidOpcode = async (promise) => {
@@ -224,7 +198,7 @@ const expectInvalidOpcode = async (promise) => {
 }
 
 /**
- * @description
+ * @description Fails if the input promise is not reject with an Invalid jump message
  * @param promise
  */
 const expectInvalidJump = async (promise) => {
@@ -238,7 +212,7 @@ const expectInvalidJump = async (promise) => {
 }
 
 /**
- * @description
+ * @description Fails if the input promise is not rejected with an Out of Gas message
  * @param promise
  */
 const expectOutOfGas = async (promise) => {
@@ -252,8 +226,8 @@ const expectOutOfGas = async (promise) => {
 }
 
 /**
- * @description
- * @returns
+ * @description Mine the local evm
+ * @returns promise
  */
 const advanceBlock = () => {
   return new Promise((resolve, reject) => {
@@ -268,7 +242,7 @@ const advanceBlock = () => {
 }
 
 /**
- * @description
+ * @description Advance to input block
  * @param number
  */
 const advanceToBlock = async(number) => {
@@ -289,10 +263,8 @@ module.exports = {
   inEther,
   inWei,
   inBaseUnits,
-  inTOKEN_UNITS,
+  inTokenUnits,
   inCents,
-  deployContract,
-  deployContracts,
   getAddress,
   getAddresses,
   sendTransaction,

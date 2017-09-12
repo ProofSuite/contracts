@@ -1,14 +1,18 @@
-var Promise = require('bluebird')
+/**
+ * Ownership helpers module
+ * @module ownership-helpers
+ */
 
-import { gas } from '../scripts/testConfig.js'
-import { waitUntilTransactionsMined } from '../scripts/helpers.js'
+var Promise = require('bluebird')
+import { gas } from './testConfig.js'
+import { waitUntilTransactionsMined } from './helpers.js'
 
 /**
- * @description
- * @param contract
- * @param sender
- * @param receiver
- * @returns
+ * @description Transfer ownership of input contract and wait until corresponding transaction is mined
+ * @param contract {Object} - Truffle Contract Object
+ * @param sender {String}
+ * @param receiver {String}
+ * @returns transaction receipt {Object}
  */
 const transferOwnership = async (contract, sender, receiver) => {
   let params = { from: sender, gas: gas }
@@ -18,10 +22,10 @@ const transferOwnership = async (contract, sender, receiver) => {
 }
 
 /**
- * @description
- * @param contracts
- * @param sender
- * @param receiver
+ * @description Transfer the ownerships of input contracts and wait until corresponding transactions are mined
+ * @param contracts {Object} - Truffle Object Contract Array
+ * @param sender {String}
+ * @param receiver {String}
  */
 const transferOwnerships = async (contracts, sender, receiver) => {
   let promises = contracts.map(function (contract) { transferOwnership(contract, sender, receiver) })
@@ -29,10 +33,10 @@ const transferOwnerships = async (contracts, sender, receiver) => {
 }
 
 /**
- * @description
- * @param contract
- * @param owner
- * @returns
+ * @description Lock ownership of input contract and wait until corresponding transaction is mined
+ * @param contract {Object} - Truffle Object Contract Array
+ * @param owner - {String}
+ * @returns Transaction Receipt {Object}
  */
 const lockOwnership = async (contract, owner) => {
   let params = { from: owner, gas: gas }

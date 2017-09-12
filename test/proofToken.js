@@ -1,3 +1,9 @@
+require('../scripts/jsHelpers.js')
+
+const fs = require('fs')
+const csv = require('csv-parser')
+const json2csv = require('json2csv')
+
 const BigNumber = web3.BigNumber
 let chai = require('chai')
 var chaiAsPromised = require('chai-as-promised')
@@ -26,7 +32,8 @@ import {
   mintToken,
   getOwner,
   claimTokens,
-  transferToken
+  transferToken,
+  importBalances
 } from '../scripts/tokenHelpers.js'
 
 const assert = chai.assert
@@ -105,6 +112,44 @@ contract('proofToken', (accounts) => {
     it('should have PRFT symbol', async function() {
       let symbol = await proofToken.symbol.call()
       symbol.should.be.equal('PRFT')
+    })
+  })
+
+  describe('Import balances', function () {
+    it('should correctly import a few balances', async function() {
+      let addresses = [sender, receiver]
+      let balances = [100, 100]
+      await importBalances(proofToken, addresses, balances)
+
+      let senderBalance = await getTokenBalance(proofToken, sender)
+      let receiverBalance = await getTokenBalance(proofToken, receiver)
+
+      senderBalance.should.be.equal(100)
+      receiverBalance.should.be.equal(100)
+    })
+
+    it('should correctly import balances from a CSV file', async function() {
+      let addresses = []
+      let balances = []
+
+      const writeData = new Promise((resolve, reject) => {
+        fs.createReadStream('./test/balances.csv')
+          .pipe(csv())
+          .on('data', function (data) {
+            addresses.push(data['address'])
+            balances.push(data['balance'])
+          })
+          .on('end', resolve)
+      })
+
+      await writeData
+      balances = balances.toNumber()
+      await importBalances(proofToken, addresses, balances)
+
+      for (let i = 0; i++; i < 10) {
+        let balance = await getTokenBalance(proofToken, addresses[index])
+        balance.should.be.equal(balances[i])
+      }
     })
   })
 

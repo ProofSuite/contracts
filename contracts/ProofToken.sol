@@ -26,7 +26,10 @@ contract ProofToken is ERC20, Ownable {
   string public constant name = "Proof Token";
   string public constant symbol = "PRFT";
   uint8 public constant decimals = 18;
+
   bool public mintingFinished = false;
+  bool public presaleBalancesImported = false;
+  bool public presaleBalancesLocked = false;
 
   uint256 public constant TOKENS_ALLOCATED_TO_PROOF = 1181031 * (10 ** 18);
 
@@ -81,27 +84,6 @@ contract ProofToken is ERC20, Ownable {
     return allowed[_owner][_spender];
   }
 
-  function claim() returns (bool) {
-    require(presaleToken.balanceOf(msg.sender) > 0);
-    require(claimed[msg.sender] == false);
-
-    claimed[msg.sender] = true;
-    balances[msg.sender] = presaleToken.balanceOf(msg.sender);
-
-    return true;
-  }
-
-  modifier canMint() {
-    require(!mintingFinished);
-    _;
-  }
-
-  /**
-   * Function to mint tokens
-   * @param _to The address that will recieve the minted tokens.
-   * @param _amount The amount of tokens to mint.
-   * @return A boolean that indicates if the operation was successful.
-   */
   function mint(address _to, uint256 _amount) onlyOwner canMint returns (bool) {
     totalSupply = totalSupply.add(_amount);
     balances[_to] = balances[_to].add(_amount);
@@ -110,10 +92,42 @@ contract ProofToken is ERC20, Ownable {
     return true;
   }
 
+  modifier canMint() {
+    require(!mintingFinished);
+    _;
+  }
+
+
   /**
-   * Function to stop minting new tokens.
-   * @return True if the operation was successful.
+   * Import presale balances before the start of the token sale. After importing
+   * balances, lockPresaleBalances() has to be called to prevent further modification
+   * of presale balances.
+   * @param _to The address that will recieve the minted tokens.
+   * @param _amount The amount of tokens to mint.
+   * @return A boolean that indicates if the operation was successful.
    */
+  function importPresaleBalances(address[] _addresses, uint256[] _balances) onlyOwner returns (bool) {
+    require(presaleBalancesLocked == false);
+    for (uint256 i = 0; i < _addresses.length; i++) {
+      balances[_addresses[i]] = _balances[i];
+    }
+    presaleBalancesImported = true;
+    return true;
+  }
+
+
+  /**
+   * Lock presale balances after successful presale balance import
+   * @param _to The address that will recieve the minted tokens.
+   * @param _amount The amount of tokens to mint.
+   * @return A boolean that indicates if the operation was successful.
+   */
+  function lockPresaleBalances() onlyOwner returns (bool) {
+    require(presaleBalancesImported == true);
+    presaleBalancesLocked = true;
+    return true;
+  }
+
   function finishMinting() onlyOwner returns (bool) {
     mintingFinished = true;
 

@@ -10,8 +10,6 @@ const PROOF_WALLET_ADDRESS = '0xe2b3204f29ab45d5fd074ff02ade098fbc381d42'
 const pointsMultiplier = 10 ** 18
 const ether = 10 ** 18
 
-
-
 module.exports = {
   DEFAULT_GAS,
   DEFAULT_GAS_PRICE,

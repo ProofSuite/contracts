@@ -156,7 +156,7 @@ contract('Crowdsale', (accounts) => {
 
       let walletBalance = getBalance(wallet)
       let balanceIncrease = (walletBalance - initialWalletBalance) / (1 * ether)
-      expect(balanceIncrease).almost.equal(1, 4)
+      expect(balanceIncrease).almost.equal(1, 3)
     })
 
     it('should create tokens for the sender', async function() {
@@ -204,7 +204,7 @@ contract('Crowdsale', (accounts) => {
       let balance = await getTokenBalance(proofToken, sender)
       let balanceIncrease = balance - initialBalance
 
-      balanceIncrease.should.be.equal(expectedTokens)
+      expect(balanceIncrease).almost.equal(expectedTokens, 3)
     })
 
     it('should throw if the number of tokens exceeds the cap', async function() {

@@ -1,9 +1,14 @@
-import { waitUntilTransactionsMined } from '../scripts/helpers.js'
+/**
+ * Pausable helpers module
+ * @module pausable-helpers
+ */
+
+import { waitUntilTransactionsMined } from './helpers.js'
 
 /**
- * @description
- * @param contract
- * @param owner
+ * @description Pause the contract and wait until the transaction is mined
+ * @param contract Token truffle contract
+ * @param owner Ethereum Address
  */
 const pause = async(contract, owner) => {
   let tx = await contract.pause({ from: owner, gas: 1000000 })
@@ -11,9 +16,9 @@ const pause = async(contract, owner) => {
 }
 
 /**
- * @description
- * @param contract
- * @param owner
+ * @description Unpause contract and wait until the transaction is mined
+ * @param contract Token Truffle Contract
+ * @param owner Ethereum Address
  */
 const unpause = async(contract, owner) => {
   let tx = await contract.unpause({ from :owner, gas: 1000000 })

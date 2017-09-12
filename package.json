@@ -47,6 +47,8 @@
     "chai": "~4.1.2",
     "chai-as-promised": "~7.1.1",
     "chai-bignumber": "~2.0.1",
-    "chai-stats": "~0.3.0"
+    "chai-stats": "~0.3.0",
+    "csv-parser": "~1.11.0",
+    "json2csv": "~3.11.1"
   }
 }

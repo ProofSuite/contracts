@@ -1,5 +1,11 @@
-const h = require('../scripts/helpers.js')
-import { DEFAULT_GAS, DEFAULT_GAS_PRICE } from '../scripts/testConfig.js'
+/**
+ * Token helpers module
+ * @module token-helpers
+ */
+
+
+const h = require('./helpers.js')
+import { DEFAULT_GAS, DEFAULT_GAS_PRICE } from './testConfig.js'
 
 /**
  * @description Get owner of token contract
@@ -124,6 +130,19 @@ const claimTokens = async(token, sender) => {
   return txnReceipt
 }
 
+/**
+ * @description Import presale tokens to the token sale contract
+ * @param token
+ * @param addresses
+ * @param balances
+ * @returns transaction receipt
+ */
+const importBalances = async(token, addresses, balances) => {
+  let txn = await token.setPresaleBalances(addresses, balances)
+  let txnReceipt = await h.waitUntilTransactionsMined(txn.tx)
+  return txnReceipt
+}
+
 module.exports = {
   getOwner,
   getTotalSupply,
@@ -134,5 +153,6 @@ module.exports = {
   finishMinting,
   baseUnits,
   ERC20Units,
-  claimTokens
+  claimTokens,
+  importBalances
 }
