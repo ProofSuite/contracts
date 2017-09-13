@@ -102,8 +102,8 @@ contract ProofToken is ERC20, Ownable {
    * Import presale balances before the start of the token sale. After importing
    * balances, lockPresaleBalances() has to be called to prevent further modification
    * of presale balances.
-   * @param _to The address that will recieve the minted tokens.
-   * @param _amount The amount of tokens to mint.
+   * @param _addresses Array of presale addresses
+   * @param _balances Array of balances corresponding to presale addresses.
    * @return A boolean that indicates if the operation was successful.
    */
   function importPresaleBalances(address[] _addresses, uint256[] _balances) onlyOwner returns (bool) {
@@ -118,8 +118,6 @@ contract ProofToken is ERC20, Ownable {
 
   /**
    * Lock presale balances after successful presale balance import
-   * @param _to The address that will recieve the minted tokens.
-   * @param _amount The amount of tokens to mint.
    * @return A boolean that indicates if the operation was successful.
    */
   function lockPresaleBalances() onlyOwner returns (bool) {

@@ -9,7 +9,7 @@ import { TOKENS_ALLOCATED_TO_PROOF, ether } from '../scripts/testConfig.js'
 import { getAddress } from '../scripts/helpers.js'
 import { baseUnits, mintToken, getTokenBalance } from '../scripts/tokenHelpers.js'
 import { transferOwnership } from '../scripts/ownershipHelpers.js'
-import { mintToken, buyTokens } from '../scripts/tokenSaleHelpers.js'
+import { buyTokens } from '../scripts/tokenSaleHelpers.js'
 
 const assert = chai.assert
 const should = chai.should()

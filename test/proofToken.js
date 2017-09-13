@@ -31,7 +31,6 @@ import {
   getTotalSupply,
   mintToken,
   getOwner,
-  claimTokens,
   transferToken,
   importBalances
 } from '../scripts/tokenHelpers.js'
@@ -222,50 +221,6 @@ contract('proofToken', (accounts) => {
   })
 
   describe('Token import', function () {
-
-    it('tokens should initially not be marked claimed', async function() {
-      await mintToken(proofPresaleToken, fund, sender, 10000)
-      let claimed = await proofToken.claimed(sender)
-      claimed.should.be.false
-    })
-
-    it('tokens should be claimable', async function() {
-      await mintToken(proofPresaleToken, fund, sender, 10000)
-
-      let initialTokenBalance = await getTokenBalance(proofToken, sender)
-      await claimTokens(proofToken, sender)
-
-      let tokenBalance = await getTokenBalance(proofToken, sender)
-      let balanceIncrease = tokenBalance - initialTokenBalance
-
-      balanceIncrease.should.be.equal(10000)
-    })
-
-    it('tokens should be marked claimed after being claimed', async function() {
-      await mintToken(proofPresaleToken, fund, sender, 10000)
-      await claimTokens(proofToken, sender)
-      let claimed = await proofToken.claimed(sender)
-      claimed.should.be.true
-    })
-
-    it('tokens should not be claimable twice', async function() {
-      await mintToken(proofPresaleToken, fund, sender, 10000)
-
-      let initialTokenBalance = await getTokenBalance(proofToken, sender)
-      await claimTokens(proofToken, sender)
-
-      let tokenBalance = await getTokenBalance(proofToken, sender)
-      let balanceIncrease = tokenBalance - initialTokenBalance
-
-      balanceIncrease.should.be.equal(10000)
-
-      let params = { from: sender, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
-      await expectInvalidOpcode(proofToken.claim(params))
-
-      tokenBalance = await getTokenBalance(proofToken, sender)
-      balanceIncrease = tokenBalance - initialTokenBalance
-
-      balanceIncrease.should.be.equal(10000)
-    })
   })
+
 })
