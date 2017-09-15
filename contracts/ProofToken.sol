@@ -20,7 +20,6 @@ contract ProofToken is ERC20, Ownable {
 
   mapping(address => uint) balances;
   mapping (address => mapping (address => uint)) allowed;
-  mapping (address => bool) public claimed;
 
 
   string public constant name = "Proof Token";

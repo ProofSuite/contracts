@@ -6,10 +6,11 @@ var chaiBigNumber = require('chai-bignumber')(BigNumber)
 chai.use(chaiAsPromised).use(chaiBigNumber).use(chaiStats).should()
 
 import { TOKENS_ALLOCATED_TO_PROOF, ether } from '../scripts/testConfig.js'
-import { getAddress } from '../scripts/helpers.js'
-import { baseUnits, mintToken, getTokenBalance } from '../scripts/tokenHelpers.js'
+import { getAddress, advanceToBlock } from '../scripts/helpers.js'
+import { baseUnits, mintToken, getTokenBalance, getTotalSupply } from '../scripts/tokenHelpers.js'
 import { transferOwnership } from '../scripts/ownershipHelpers.js'
 import { buyTokens } from '../scripts/tokenSaleHelpers.js'
+
 
 const assert = chai.assert
 const should = chai.should()
@@ -54,23 +55,18 @@ contract('Crowdsale', (accounts) => {
     tokenSaleAddress = await getAddress(tokenSale)
   })
 
-  // it('should be ended only after end', async function() {
-  //   let ended = await tokenSale.hasEnded()
-  //   ended.should.equal(false)
-  // })
-
-  describe('Token Information', function() {
+  describe('Token Information', async function() {
 
     beforeEach(async function() {
-      transferOwnership(proofToken, fund, tokenSaleAddress)
+      await transferOwnership(proofToken, fund, tokenSaleAddress)
     })
 
     it('should return the correct token supply', async function() {
+      await advanceToBlock(startBlock)
+      await buyTokens(tokenSale, sender, 1 * ether)
 
-      await mintToken(tokenSale, fund, receiver, 1 * ether)
-
-      let supply = await proofToken.totalSupply.call()
-      let tokenSaleDisplaySupply = await tokenSale.totalSupply.call()
+      let supply = await getTotalSupply(proofToken)
+      let tokenSaleDisplaySupply = await getTotalSupply(tokenSale)
 
       supply.should.be.equal(tokenSaleDisplaySupply)
     })
@@ -78,6 +74,7 @@ contract('Crowdsale', (accounts) => {
     //the token balance of each token holder can also be displayed via the token sale contract - by routing towards the proof token balanceOf() method
     // we verify both balances are equal
     it('should return the correct token balance (tokenSale.balanceOf must be equal to proofToken.balanceOf)', async function() {
+      await advanceToBlock(startBlock)
       await buyTokens(tokenSale, sender, 1 * ether)
       let senderBalance = await getTokenBalance(proofToken, sender)
       let senderDisplayBalance = await getTokenBalance(tokenSale, sender)
@@ -88,7 +85,8 @@ contract('Crowdsale', (accounts) => {
   describe('Initial State', function () {
 
     beforeEach(async function() {
-      transferOwnership(proofToken, fund, tokenSaleAddress)
+      await transferOwnership(proofToken, fund, tokenSaleAddress)
+      await advanceToBlock(startBlock)
     })
 
     it('should initially set the wallet', async function() {
@@ -108,6 +106,7 @@ contract('Crowdsale', (accounts) => {
   })
 
   describe('Initial State after presale', async function() {
+
     beforeEach(async function() {
       startBlock = web3.eth.blockNumber + 10
       endBlock = web3.eth.blockNumber + 20

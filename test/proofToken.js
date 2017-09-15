@@ -32,7 +32,8 @@ import {
   mintToken,
   getOwner,
   transferToken,
-  importBalances
+  importBalances,
+  lockBalances
 } from '../scripts/tokenHelpers.js'
 
 const assert = chai.assert
@@ -118,7 +119,7 @@ contract('proofToken', (accounts) => {
     it('should correctly import a few balances', async function() {
       let addresses = [sender, receiver]
       let balances = [100, 100]
-      await importBalances(proofToken, addresses, balances)
+      await importBalances(proofToken, fund, addresses, balances)
 
       let senderBalance = await getTokenBalance(proofToken, sender)
       let receiverBalance = await getTokenBalance(proofToken, receiver)
@@ -143,13 +144,97 @@ contract('proofToken', (accounts) => {
 
       await writeData
       balances = balances.toNumber()
-      await importBalances(proofToken, addresses, balances)
+      await importBalances(proofToken, fund, addresses, balances)
 
       for (let i = 0; i++; i < 10) {
         let balance = await getTokenBalance(proofToken, addresses[index])
         balance.should.be.equal(balances[i])
       }
     })
+
+
+    it('should not import balances if caller is not the owner of the contract', async function() {
+
+      let addresses = []
+      let balances = []
+
+      const writeData = new Promise((resolve, reject) => {
+        fs.createReadStream('./test/balances.csv')
+        .pipe(csv())
+        .on('data', function (data) {
+          addresses.push(data['address'])
+          balances.push(data['balances'])
+        })
+        .on('end', resolve)
+      })
+
+      await writeData
+      balances = balances.toNumber()
+      await expectInvalidOpcode(importBalances(proofToken, hacker, addresses, balances))
+    })
+
+
+    it('can not lock the presale balances before the balances are imported', async function() {
+      await expectInvalidOpcode(lockBalances(proofToken, fund))
+    })
+
+    it('should have import flag set to false before the balances are imported', async function() {
+      let importFlag = await proofToken.presaleBalancesImported.call()
+      importFlag.should.be.false
+    })
+
+    it('should set import flag set to true after the balances are imported', async function() {
+      let addresses = []
+      let balances = []
+
+      const writeData = new Promise((resolve, reject) => {
+        fs.createReadStream('./test/balances.csv')
+        .pipe(csv())
+        .on('data', function(data) {
+          addresses.push(data['address'])
+          balances.push(data['balance'])
+        })
+        .on('end', resolve)
+      })
+
+      await writeData
+      balances = balances.toNumber()
+      await importBalances(proofToken, fund, addresses, balances)
+
+      let importFlag = await proofToken.presaleBalancesImported.call()
+      importFlag.should.be.true
+    })
+
+    it('can lock the presale balances after the balances are imported', async function() {
+      let addresses = []
+      let balances = []
+
+      const writeData = new Promise((resolve, reject) => {
+        fs.createReadStream('./test/balances.csv')
+          .pipe(csv())
+          .on('data', function (data) {
+            addresses.push(data['address'])
+            balances.push(data['balance'])
+          })
+          .on('end', resolve)
+      })
+
+      await writeData
+      balances = balances.toNumber()
+      await importBalances(proofToken, fund, addresses, balances)
+
+      for (let i = 0; i++; i < 10) {
+        let balance = await getTokenBalance(proofToken, addresses[index])
+        balance.should.be.equal(balances[i])
+      }
+
+      await lockBalances(proofToken, fund).should.be.fulfilled
+
+      let balancesLocked = await proofToken.presaleBalancesLocked.call()
+      balancesLocked.should.be.true
+    })
+
+
   })
 
   describe('Minting', function () {

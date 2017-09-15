@@ -131,8 +131,14 @@ const claimTokens = async(token, sender) => {
  * @param balances
  * @returns transaction receipt
  */
-const importBalances = async(token, addresses, balances) => {
-  let txn = await token.importPresaleBalances(addresses, balances)
+const importBalances = async(token, caller, addresses, balances) => {
+  let txn = await token.importPresaleBalances(addresses, balances, {from: caller})
+  let txnReceipt = await h.waitUntilTransactionsMined(txn.tx)
+  return txnReceipt
+}
+
+const lockBalances = async(token, caller) => {
+  let txn = await token.lockPresaleBalances({ from: caller })
   let txnReceipt = await h.waitUntilTransactionsMined(txn.tx)
   return txnReceipt
 }
@@ -148,5 +154,6 @@ module.exports = {
   baseUnits,
   ERC20Units,
   claimTokens,
-  importBalances
+  importBalances,
+  lockBalances
 }

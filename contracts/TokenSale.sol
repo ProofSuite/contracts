@@ -20,7 +20,7 @@ contract TokenSale is Pausable {
   uint256 public cap;
   uint256 public rate;
   uint256 public priceInWei;
-  uint256 public pointsMultiplier;
+  uint256 public decimalsMultiplier;
   uint256 public initialSupply;
   uint256 public startBlock;
   uint256 public endBlock;
@@ -44,13 +44,6 @@ contract TokenSale is Pausable {
    * event for signaling finished crowdsale
    */
   event Finalized();
-  event IntLog(string name, uint256 value);
-  event BoolLog(string name, bool value);
-  event StringLog(string name, string value);
-  event AddressLog(string name, address value);
-
-
-
 
   function TokenSale(
     address _wallet,
@@ -67,21 +60,20 @@ contract TokenSale is Pausable {
     endBlock = _endBlock;
     proofToken = ProofToken(_tokenAddress);
 
-    IntLog("TotalTokens", TOTAL_TOKENS);
     uint256 allocatedTokens = proofToken.totalSupply();
-    IntLog("allocatedTokens", allocatedTokens);
     uint256 remainingTokens = TOTAL_TOKENS - allocatedTokens;
-    IntLog("remainingTokens", remainingTokens);
 
 
     priceInWei = 88000000000000000;
-    pointsMultiplier = (10 ** 18);
+    decimalsMultiplier = (10 ** 18);
     cap = remainingTokens / (10 ** 18);
-
-    IntLog("cap", cap);
   }
 
 
+  /**
+   * High level token purchase function
+   * @param beneficiary will recieve the tokens.
+   */
   function() payable {
     buyTokens(msg.sender);
   }
@@ -96,7 +88,7 @@ contract TokenSale is Pausable {
 
     uint256 weiAmount = msg.value;
     weiRaised = weiRaised.add(weiAmount);
-    uint256 tokens = weiAmount.mul(pointsMultiplier).div(priceInWei);
+    uint256 tokens = weiAmount.mul(decimalsMultiplier).div(priceInWei);
 
     proofToken.mint(beneficiary, tokens);
     TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
@@ -118,7 +110,11 @@ contract TokenSale is Pausable {
     return withinCap && nonZeroPurchase && withinPeriod;
   }
 
-
+  /**
+  @dev Not sure if this function is actually effective. From my understanding, the number of wei
+  @dev raised needs to be exactly equal to the cap which is probably never going to be reached
+  @dev exactly. Maybe better to just remove this function ?
+   */
   function finalize() onlyOwner {
     require(!isFinalized);
     require(hasEnded());
@@ -129,7 +125,11 @@ contract TokenSale is Pausable {
     isFinalized = true;
   }
 
-
+  /**
+  @dev Not sure if this function is actually effective. From my understanding, the number of wei
+  @dev raised needs to be exactly equal to the cap which is probably never going to be reached
+  @dev exactly. Maybe better to just remove this function ?
+   */
   function hasEnded() public constant returns (bool) {
     bool capReached = weiRaised >= cap.mul(priceInWei);
     return capReached;
