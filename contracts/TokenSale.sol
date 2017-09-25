@@ -72,7 +72,6 @@ contract TokenSale is Pausable {
 
   /**
    * High level token purchase function
-   * @param beneficiary will recieve the tokens.
    */
   function() payable {
     buyTokens(msg.sender);
