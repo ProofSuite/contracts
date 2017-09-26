@@ -4,7 +4,6 @@ import './SafeMath.sol';
 import './ProofToken.sol';
 import './Pausable.sol';
 
-
 /**
  * @title Tokensale
  * Tokensale allows investors to make token purchases and assigns them tokens based
