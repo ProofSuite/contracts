@@ -41,7 +41,6 @@ const ProofToken = artifacts.require('./ProofToken.sol')
 const TokenSale = artifacts.require('./TokenSale.sol')
 
 contract('Crowdsale', (accounts) => {
-            console.log(web3.eth.getBalance(accounts[0]) / 10 ** 18)
             let fund = accounts[0]
             let tokenSale
             let tokenSaleAddress
