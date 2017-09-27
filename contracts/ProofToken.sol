@@ -21,7 +21,6 @@ contract ProofToken is ERC20, Ownable {
   mapping(address => uint) balances;
   mapping (address => mapping (address => uint)) allowed;
 
-
   string public constant name = "Proof Token";
   string public constant symbol = "PRFT";
   uint8 public constant decimals = 18;
@@ -35,10 +34,7 @@ contract ProofToken is ERC20, Ownable {
   event Mint(address indexed to, uint256 amount);
   event MintFinished();
 
-  function ProofToken(address _presaleTokenAddress, address _proofWalletAddress) {
-
-    presaleToken = ProofPresaleToken(_presaleTokenAddress);
-    totalSupply = presaleToken.totalSupply();
+  function ProofToken(address _proofWalletAddress) {
 
     balances[_proofWalletAddress] = balances[_proofWalletAddress].add(TOKENS_ALLOCATED_TO_PROOF);
     totalSupply = totalSupply.add(TOKENS_ALLOCATED_TO_PROOF);
@@ -103,17 +99,21 @@ contract ProofToken is ERC20, Ownable {
    * of presale balances.
    * @param _addresses Array of presale addresses
    * @param _balances Array of balances corresponding to presale addresses.
+   * @param _presaleAddress To import the presale token total supply
    * @return A boolean that indicates if the operation was successful.
    */
-  function importPresaleBalances(address[] _addresses, uint256[] _balances) onlyOwner returns (bool) {
+  function importPresaleBalances(address[] _addresses, uint256[] _balances, address _presaleAddress) onlyOwner returns (bool) {
     require(presaleBalancesLocked == false);
+    ProofPresaleToken presale = ProofPresaleToken(_presaleAddress);
+
     for (uint256 i = 0; i < _addresses.length; i++) {
       balances[_addresses[i]] = _balances[i];
     }
+
+    totalSupply = presale.totalSupply();
     presaleBalancesImported = true;
     return true;
   }
-
 
   /**
    * Lock presale balances after successful presale balance import
@@ -127,7 +127,6 @@ contract ProofToken is ERC20, Ownable {
 
   function finishMinting() onlyOwner returns (bool) {
     mintingFinished = true;
-
     MintFinished();
     return true;
   }

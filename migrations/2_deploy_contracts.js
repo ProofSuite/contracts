@@ -12,18 +12,17 @@ const PROOF_WALLET_ADDRESS = '0xe2b3204f29ab45d5fd074ff02ade098fbc381d42'
 
 module.exports = function(deployer) {
 
-  console.log(deployer.network)
-
   if (deployer.network == "development") {
-
-    deployer.deploy(ProofPresaleToken)
+    deployer.deploy(
+      ProofPresaleToken
+    )
     .then(function() {
       return deployer.deploy(
         ProofToken,
-        ProofPresaleToken.address,
         PROOF_WALLET_ADDRESS,
-        {gas: DEFAULT_GAS, gasPrice: DEFAULT_HIGH_GAS_PRICE})
-      })
+        {gas: DEFAULT_GAS, gasPrice: DEFAULT_HIGH_GAS_PRICE}
+      )
+    })
     .then(function() {
       return deployer.deploy(
         TokenSale,
@@ -31,51 +30,26 @@ module.exports = function(deployer) {
         ProofToken.address,
         10,
         20,
-        {gas: DEFAULT_GAS, gasPrice: DEFAULT_HIGH_GAS_PRICE})
-      });
-
-  } else if (deployer.network == "") {
-
-    deployer.deploy(ProofPresaleToken)
-    .then(function() {
-      return deployer.deploy(
-        ProofToken,
-        ProofPresaleToken.address,
-        PROOF_WALLET_ADDRESS,
-        {gas: DEFAULT_GAS, gasPrice: DEFAULT_HIGH_GAS_PRICE})
-      })
-    .then(function() {
-      return deployer.deploy(
-        TokenSale,
-        WALLET_ADDRESS,
-        ProofToken.address,
-        10,
-        20,
-        {gas: DEFAULT_GAS, gasPrice: DEFAULT_HIGH_GAS_PRICE})
-      });
-
-  } else if (deployer.network == "") {
-
-    deployer.deploy(ProofPresaleToken)
-    .then(function() {
-      return deployer.deploy(
-        ProofToken,
-        ProofPresaleToken.address,
-        PROOF_WALLET_ADDRESS,
-        {gas: DEFAULT_GAS, gasPrice: DEFAULT_HIGH_GAS_PRICE})
-      })
-    .then(function() {
-      return deployer.deploy(
-        TokenSale,
-        WALLET_ADDRESS,
-        ProofToken.address,
-        10,
-        20,
-        {gas: DEFAULT_GAS, gasPrice: DEFAULT_HIGH_GAS_PRICE})
-      });
-
+        {gas: DEFAULT_GAS, gasPrice: DEFAULT_HIGH_GAS_PRICE}
+      )
+    })
   }
 
+  else {
 
-
-  };
+    deployer.deploy(
+      ProofToken,
+      PROOF_WALLET_ADDRESS,
+      {gas: DEFAULT_GAS, gasPrice: DEFAULT_HIGH_GAS_PRICE}
+    )
+    .then(function() {
+      return deployer.deploy(
+        TokenSale,
+        WALLET_ADDRESS,
+        ProofToken.address,
+        10,
+        20,
+        {gas: DEFAULT_GAS, gasPrice: DEFAULT_HIGH_GAS_PRICE})
+    })
+  }
+}

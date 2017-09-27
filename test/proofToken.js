@@ -119,7 +119,7 @@ contract('proofToken', (accounts) => {
     it('should correctly import a few balances', async function() {
       let addresses = [sender, receiver]
       let balances = [100, 100]
-      await importBalances(proofToken, fund, addresses, balances)
+      await importBalances(proofToken, proofPresaleToken, fund, addresses, balances)
 
       let senderBalance = await getTokenBalance(proofToken, sender)
       let receiverBalance = await getTokenBalance(proofToken, receiver)
@@ -144,7 +144,7 @@ contract('proofToken', (accounts) => {
 
       await writeData
       balances = balances.toNumber()
-      await importBalances(proofToken, fund, addresses, balances)
+      await importBalances(proofToken, proofPresaleToken, fund, addresses, balances)
 
       for (let i = 0; i++; i < 10) {
         let balance = await getTokenBalance(proofToken, addresses[index])
@@ -170,7 +170,7 @@ contract('proofToken', (accounts) => {
 
       await writeData
       balances = balances.toNumber()
-      await expectInvalidOpcode(importBalances(proofToken, hacker, addresses, balances))
+      await expectInvalidOpcode(importBalances(proofToken, proofPresaleToken, hacker, addresses, balances))
     })
 
 
@@ -199,7 +199,7 @@ contract('proofToken', (accounts) => {
 
       await writeData
       balances = balances.toNumber()
-      await importBalances(proofToken, fund, addresses, balances)
+      await importBalances(proofToken, proofPresaleToken, fund, addresses, balances)
 
       let importFlag = await proofToken.presaleBalancesImported.call()
       importFlag.should.be.true
@@ -221,7 +221,7 @@ contract('proofToken', (accounts) => {
 
       await writeData
       balances = balances.toNumber()
-      await importBalances(proofToken, fund, addresses, balances)
+      await importBalances(proofToken, proofPresaleToken, fund, addresses, balances)
 
       for (let i = 0; i++; i < 10) {
         let balance = await getTokenBalance(proofToken, addresses[index])

@@ -1,4 +1,5 @@
 const DEFAULT_GAS = 2 * 10 ** 6
+const MAX_GAS = 4.7 * 10 ** 6
 const DEFAULT_LOW_GAS_PRICE = 2 * 10 ** 9
 const DEFAULT_GAS_PRICE = 6 * 10 ** 9
 const DEFAULT_HIGH_GAS_PRICE = 40 * 10 ** 9
@@ -14,6 +15,7 @@ const ether = 10 ** 18
 
 module.exports = {
   DEFAULT_GAS,
+  MAX_GAS,
   DEFAULT_LOW_GAS_PRICE,
   DEFAULT_GAS_PRICE,
   DEFAULT_HIGH_GAS_PRICE,
