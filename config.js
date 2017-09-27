@@ -6,13 +6,11 @@ let config = {
     kovan: 'https://kovan.infura.io/Oi27hEUIuGqMsrYGpI7e'
   },
   testnet: {
-    deployerAccount: '',
-    tokenSaleWallet: '',
-    presaleToken: '',
-    presale: '',
     datadir: '/Users/davidvanisacker/Library/Ethereum/testnet',
-    wallet: { address: '0x38ef4f14eaced72a030c2a3588210b83b0e4944a',
-        password: 'flowersinthefield182'}
+    wallet: {
+      address: '0x38ef4f14eaced72a030c2a3588210b83b0e4944a',
+      password: 'flowersinthefield182'
+    }
   },
   rinkeby: {
     datadir: '/Users/davidvanisacker/Library/Ethereum/rinkeby',
@@ -22,16 +20,11 @@ let config = {
     }
   },
   mainnet: {
-    deployerAccount: '',
-    tokenSaleWallet: '',
-    presaleToken: '',
-    presale: '',
     datadir: '/Users/davidvanisacker/Library/Ethereum',
-    wallets:
-      {
-        address: '',
-        password: ''
-      }
+    wallet: {
+      address: '',
+      password: ''
+    }
   },
   constants: {
     DEFAULT_GAS: 2 * 10 ** 6,
