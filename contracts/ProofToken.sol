@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import './SafeMath.sol';
 import './ERC20.sol';
@@ -18,6 +18,7 @@ contract ProofToken is ERC20, Ownable {
 
   ProofPresaleToken public presaleToken;
 
+  address public proofTokenWallet;
   mapping(address => uint) balances;
   mapping (address => mapping (address => uint)) allowed;
 
@@ -34,9 +35,10 @@ contract ProofToken is ERC20, Ownable {
   event Mint(address indexed to, uint256 amount);
   event MintFinished();
 
-  function ProofToken(address _proofWalletAddress) {
+  function ProofToken() {
 
-    balances[_proofWalletAddress] = balances[_proofWalletAddress].add(TOKENS_ALLOCATED_TO_PROOF);
+    proofTokenWallet = 0xE2b3204F29Ab45d5fd074Ff02aDE098FbC381D42;
+    balances[proofTokenWallet] = balances[proofTokenWallet].add(TOKENS_ALLOCATED_TO_PROOF);
     totalSupply = totalSupply.add(TOKENS_ALLOCATED_TO_PROOF);
   }
 

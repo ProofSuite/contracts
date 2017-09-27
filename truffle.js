@@ -23,6 +23,14 @@ module.exports = {
       gasPrice: config.DEFAULT_HIGH_GAS_PRICE,
       from: '0x38ef4f14eaced72a030c2a3588210b83b0e4944a'     // ethereum testnet (ex: ropsten) main account
     },
+    rinkeby: {
+      host: 'localhost',
+      port: 8545,
+      network_id: 4,
+      gas: config.DEFAULT_GAS,
+      gasPrice: config.DEFAULT_HIGH_GAS_PRICE,
+      from: ''
+    },
     mainnet: {
       host: 'localhost',
       port: 8545,

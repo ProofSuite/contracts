@@ -19,7 +19,6 @@ module.exports = function(deployer) {
     .then(function() {
       return deployer.deploy(
         ProofToken,
-        PROOF_WALLET_ADDRESS,
         {gas: DEFAULT_GAS, gasPrice: DEFAULT_HIGH_GAS_PRICE}
       )
     })
