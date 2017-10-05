@@ -24,7 +24,7 @@ contract TokenSale is Pausable {
   uint256 public startBlock;
   uint256 public endBlock;
   address public proofWallet;
-  bool public isFinalized;
+  bool public finalized;
 
   uint256 public constant TOTAL_TOKENS = 2 * 1181031 * (10 ** 18);
   uint256 public constant PUBLIC_TOKENS = 1181031 * (10 ** 18);
@@ -80,7 +80,7 @@ contract TokenSale is Pausable {
    * Low level token purchase function
    * @param beneficiary will recieve the tokens.
    */
-  function buyTokens(address beneficiary) payable whenNotPaused {
+  function buyTokens(address beneficiary) payable whenNotPaused whenNotFinalized {
     require(beneficiary != 0x0);
     require(validPurchase());
 
@@ -98,7 +98,6 @@ contract TokenSale is Pausable {
     wallet.transfer(msg.value);
   }
 
-
   function validPurchase() internal returns (bool) {
     uint256 current = block.number;
     bool withinPeriod = current >= startBlock && current <= endBlock;
@@ -108,30 +107,6 @@ contract TokenSale is Pausable {
     return withinCap && nonZeroPurchase && withinPeriod;
   }
 
-  /**
-  @dev Not sure if this function is actually effective. From my understanding, the number of wei
-  @dev raised needs to be exactly equal to the cap which is probably never going to be reached
-  @dev exactly. Maybe better to just remove this function ?
-   */
-  function finalize() onlyOwner {
-    require(!isFinalized);
-    require(hasEnded());
-
-    proofToken.finishMinting();
-    Finalized();
-
-    isFinalized = true;
-  }
-
-  /**
-  @dev Not sure if this function is actually effective. From my understanding, the number of wei
-  @dev raised needs to be exactly equal to the cap which is probably never going to be reached
-  @dev exactly. Maybe better to just remove this function ?
-   */
-  function hasEnded() public constant returns (bool) {
-    bool capReached = weiRaised >= cap.mul(priceInWei);
-    return capReached;
-  }
 
   function totalSupply() public constant returns (uint256) {
     return proofToken.totalSupply();
@@ -140,4 +115,40 @@ contract TokenSale is Pausable {
   function balanceOf(address _owner) public constant returns (uint256) {
     return proofToken.balanceOf(_owner);
   }
+
+  //controller interface
+
+  function proxyPayment(address _owner) payable public {
+    revert();
+  }
+
+  function onTransfer(address _from, address _to, uint _amount) public returns (bool) {
+    return true;
+  }
+
+  function onApprove(address _owner, address _spender, uint _amount) public returns (bool) {
+    // No approve/transferFrom during the sale
+    return false;
+  }
+
+
+  /**
+  @dev Not sure if this function is actually effective. From my understanding, the number of wei
+  @dev raised needs to be exactly equal to the cap which is probably never going to be reached
+  @dev exactly. Maybe better to just remove this function ?
+   */
+  function finalize() onlyOwner {
+    require(paused);
+
+    proofToken.finishMinting();
+    Finalized();
+
+    finalized = true;
+  }
+
+  modifier whenNotFinalized() {
+    require(!paused);
+    _;
+  }
+
 }

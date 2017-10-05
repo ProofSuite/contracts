@@ -117,6 +117,12 @@ const numberOfTokensFor = async (tokenSale, weiAmount) => {
   return numberOfTokens
 }
 
+const finalize = async (tokenSale, caller) => {
+  let txn = await tokenSale.finalize({ from: caller })
+  let txnReceipt = await waitUntilTransactionsMined(txn.tx)
+  return txnReceipt
+}
+
 module.exports = {
   getWallet,
   getToken,
@@ -127,5 +133,6 @@ module.exports = {
   pointsMultiplier,
   numberOfTokensFor,
   getPriceInWei,
-  getCap
+  getCap,
+  finalize
 }

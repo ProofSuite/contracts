@@ -9,6 +9,7 @@ import { TOKENS_ALLOCATED_TO_PROOF } from '../scripts/testConfig.js'
 import { getAddress } from '../scripts/helpers.js'
 import { baseUnits, mintToken } from '../scripts/tokenHelpers.js'
 import { transferOwnership } from '../scripts/ownershipHelpers.js'
+import { transferControl } from '../scripts/controlHelpers.js'
 
 const assert = chai.assert
 const should = chai.should()
@@ -40,7 +41,15 @@ contract('Crowdsale', (accounts) => {
     proofPresaleToken = await ProofPresaleToken.new()
     proofPresaleTokenAddress = await getAddress(proofPresaleToken)
 
-    proofToken = await ProofToken.new(proofPresaleTokenAddress, proofWalletAddress)
+    proofToken = await ProofToken.new(
+      '0x0',
+      '0x0',
+      0,
+      'Proof Token',
+      18,
+      'PRFT',
+      true)
+
     proofTokenAddress = await getAddress(proofToken)
 
     tokenSale = await TokenSale.new(
@@ -60,7 +69,7 @@ contract('Crowdsale', (accounts) => {
   describe('Initial State', function () {
 
     beforeEach(async function() {
-      transferOwnership(proofToken, fund, tokenSaleAddress)
+      transferControl(proofToken, fund, tokenSaleAddress)
     })
 
     it('should initially set the wallet', async function() {

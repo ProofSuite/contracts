@@ -2,7 +2,7 @@ pragma solidity ^0.4.13;
 
 import './SafeMath.sol';
 import './ERC20.sol';
-import './Ownable.sol';
+import './Controllable.sol';
 
 /**
  * @title ProofPresaleToken (PROOFP)
@@ -12,9 +12,11 @@ import './Ownable.sol';
  * https://github.com/Firstbloodio/token/blob/master/smart_contract/FirstBloodToken.sol
  */
 
-contract ProofPresaleToken is ERC20, Ownable {
+contract ProofPresaleToken is ERC20, Controllable {
 
   using SafeMath for uint256;
+
+  uint256 public totalSupply;
 
   mapping(address => uint) balances;
   mapping (address => mapping (address => uint)) allowed;
@@ -73,14 +75,14 @@ contract ProofPresaleToken is ERC20, Ownable {
     _;
   }
 
-  function mint(address _to, uint256 _amount) canMint returns (bool) {
+  function mint(address _to, uint256 _amount) onlyController canMint returns (bool) {
     totalSupply = totalSupply.add(_amount);
     balances[_to] = balances[_to].add(_amount);
     Mint(_to, _amount);
     return true;
   }
 
-  function finishMinting() onlyOwner returns (bool) {
+  function finishMinting() onlyController returns (bool) {
     mintingFinished = true;
     MintFinished();
     return true;

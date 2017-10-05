@@ -8,7 +8,7 @@ chai.use(chaiAsPromised).use(chaiBigNumber).use(chaiStats).should()
 import { getAddress,
          expectInvalidOpcode } from '../scripts/helpers.js'
 
-import { transferOwnership } from '../scripts/ownershipHelpers.js'
+import { transferControl } from '../scripts/controlHelpers.js'
 
 const assert = chai.assert
 const should = chai.should()
@@ -45,6 +45,15 @@ contract('Crowdsale', (accounts) => {
     proofToken = await ProofToken.new(proofPresaleTokenAddress, proofWalletAddress)
     proofTokenAddress = await getAddress(proofToken)
 
+    proofToken = await ProofToken.new(
+      '0x0',
+      '0x0',
+      0,
+      'Proof Token',
+      18,
+      'PRFT',
+      true)
+
     tokenSale = await TokenSale.new(
       wallet,
       proofTokenAddress,
@@ -54,22 +63,22 @@ contract('Crowdsale', (accounts) => {
 
   describe('Ownership', function () {
     it('should initially belong to contract caller', async function() {
-      let owner = await tokenSale.owner.call()
-      assert.equal(owner, fund)
+      let controller = await tokenSale.controller.call()
+      assert.equal(controller, fund)
     })
 
     it('should be transferable to another account', async function() {
-      let owner = await tokenSale.owner.call()
-      await transferOwnership(tokenSale, owner, receiver)
-      let newOwner = await tokenSale.owner.call()
+      let controller = await tokenSale.controller.call()
+      await transferControl(tokenSale, controller, receiver)
+      let newOwner = await tokenSale.controller.call()
       assert.equal(newOwner, receiver)
     })
 
-    it('should not be transferable by non-owner', async function() {
-      let owner = await tokenSale.owner.call()
-      await expectInvalidOpcode(transferOwnership(tokenSale, hacker1, hacker2))
-      const newOwner = await tokenSale.owner.call()
-      assert.equal(owner, newOwner)
+    it('should not be transferable by non-controller', async function() {
+      let controller = await tokenSale.controller.call()
+      await expectInvalidOpcode(transferControl(tokenSale, hacker1, hacker2))
+      const newOwner = await tokenSale.controller.call()
+      assert.equal(controller, newOwner)
     })
   })
 })

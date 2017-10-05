@@ -6,11 +6,11 @@ var chaiBigNumber = require('chai-bignumber')(BigNumber)
 chai.use(chaiAsPromised).use(chaiBigNumber).use(chaiStats).should()
 
 import { TOKENS_ALLOCATED_TO_PROOF, ether } from '../scripts/testConfig.js'
-import { getAddress, advanceToBlock } from '../scripts/helpers.js'
+import { getAddress, advanceToBlock, expectInvalidOpcode } from '../scripts/helpers.js'
 import { baseUnits, mintToken, getTokenBalance, getTotalSupply } from '../scripts/tokenHelpers.js'
-import { transferOwnership } from '../scripts/ownershipHelpers.js'
-import { buyTokens } from '../scripts/tokenSaleHelpers.js'
-
+import { transferControl } from '../scripts/controlHelpers.js'
+import { buyTokens, finalize } from '../scripts/tokenSaleHelpers.js'
+import { pause, unpause } from '../scripts/pausableHelpers'
 
 const assert = chai.assert
 const should = chai.should()
@@ -30,6 +30,7 @@ contract('Crowdsale', (accounts) => {
   let proofTokenAddress
   let sender = accounts[1]
   let receiver = accounts[2]
+  let hacker = accounts[3]
   let wallet = accounts[5]
   let proofWalletAddress = accounts[9]
 
@@ -43,7 +44,15 @@ contract('Crowdsale', (accounts) => {
     proofPresaleToken = await ProofPresaleToken.new()
     proofPresaleTokenAddress = await getAddress(proofPresaleToken)
 
-    proofToken = await ProofToken.new(proofPresaleTokenAddress, proofWalletAddress)
+    proofToken = await ProofToken.new(
+      '0x0',
+      '0x0',
+      0,
+      'Proof Token',
+      18,
+      'PRFT',
+      true)
+
     proofTokenAddress = await getAddress(proofToken)
 
     tokenSale = await TokenSale.new(
@@ -56,9 +65,8 @@ contract('Crowdsale', (accounts) => {
   })
 
   describe('Token Information', async function() {
-
     beforeEach(async function() {
-      await transferOwnership(proofToken, fund, tokenSaleAddress)
+      await transferControl(proofToken, fund, tokenSaleAddress)
     })
 
     it('should return the correct token supply', async function() {
@@ -71,7 +79,7 @@ contract('Crowdsale', (accounts) => {
       supply.should.be.equal(tokenSaleDisplaySupply)
     })
 
-    //the token balance of each token holder can also be displayed via the token sale contract - by routing towards the proof token balanceOf() method
+    // the token balance of each token holder can also be displayed via the token sale contract - by routing towards the proof token balanceOf() method
     // we verify both balances are equal
     it('should return the correct token balance (tokenSale.balanceOf must be equal to proofToken.balanceOf)', async function() {
       await advanceToBlock(startBlock)
@@ -83,9 +91,8 @@ contract('Crowdsale', (accounts) => {
   })
 
   describe('Initial State', function () {
-
     beforeEach(async function() {
-      await transferOwnership(proofToken, fund, tokenSaleAddress)
+      await transferControl(proofToken, fund, tokenSaleAddress)
       await advanceToBlock(startBlock)
     })
 
@@ -106,7 +113,6 @@ contract('Crowdsale', (accounts) => {
   })
 
   describe('Initial State after presale', async function() {
-
     beforeEach(async function() {
       startBlock = web3.eth.blockNumber + 10
       endBlock = web3.eth.blockNumber + 20
@@ -114,9 +120,15 @@ contract('Crowdsale', (accounts) => {
       proofPresaleToken = await ProofPresaleToken.new()
       proofPresaleTokenAddress = await getAddress(proofPresaleToken)
 
-      await mintToken(proofPresaleToken, fund, sender, 10000)
+      proofToken = await ProofToken.new(
+        '0x0',
+        '0x0',
+        0,
+        'Proof Token',
+        18,
+        'PRFT',
+        true)
 
-      proofToken = await ProofToken.new(proofPresaleTokenAddress, proofWalletAddress)
       proofTokenAddress = await getAddress(proofToken)
 
       tokenSale = await TokenSale.new(
@@ -135,5 +147,69 @@ contract('Crowdsale', (accounts) => {
 
       supply.should.be.bignumber.equal(expectedSupply)
     })
+  })
+
+  describe('Finalized state', function () {
+    beforeEach(async function() {
+      startBlock = web3.eth.blockNumber + 10
+      endBlock = web3.eth.blockNumber + 20
+
+      proofPresaleToken = await ProofPresaleToken.new()
+      proofPresaleTokenAddress = await getAddress(proofPresaleToken)
+
+      proofToken = await ProofToken.new(
+        '0x0',
+        '0x0',
+        0,
+        'Proof Token',
+        18,
+        'PRFT',
+        true)
+
+      proofTokenAddress = await getAddress(proofToken)
+
+      tokenSale = await TokenSale.new(
+        wallet,
+        proofTokenAddress,
+        startBlock,
+        endBlock)
+
+      tokenSaleAddress = await getAddress(tokenSale)
+      transferControl(proofToken, fund, tokenSaleAddress)
+    })
+
+    it('should initially not be finalized', async function() {
+      let finalized = await tokenSale.finalized.call()
+      finalized.should.be.false
+    })
+
+    it('should not be finalizeable if the token sale is not paused', async function() {
+      await expectInvalidOpcode(finalize(tokenSale, fund))
+      let finalized = await tokenSale.finalized.call()
+      finalized.should.be.false
+    })
+
+    it('should be finalizeable if the token sale is paused', async function() {
+      await pause(tokenSale, fund)
+      await finalize(tokenSale, fund)
+      let finalized = await tokenSale.finalized.call()
+      finalized.should.be.true
+    })
+
+    it('should not be finalizeable if the token sale is paused/unpaused', async function() {
+      await pause(tokenSale, fund)
+      await unpause(tokenSale, fund)
+      await expectInvalidOpcode(finalize(tokenSale, fund))
+      let finalized = await tokenSale.finalized.call()
+      finalized.should.be.false
+    })
+
+    it('should not be finalizeable by non-owner', async function() {
+      await pause(tokenSale, fund)
+      await expectInvalidOpcode(finalize(tokenSale, hacker))
+      let finalized = await tokenSale.finalized.call()
+      finalized.should.be.false
+    })
+
   })
 })

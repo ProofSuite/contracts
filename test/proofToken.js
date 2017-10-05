@@ -23,15 +23,20 @@ import {
 } from '../scripts/helpers.js'
 
 import {
-  transferOwnership
-} from '../scripts/ownershipHelpers.js'
+  transferControl
+} from '../scripts/controlHelpers.js'
 
 import {
   getTokenBalance,
+  getTokenBalanceAt,
   getTotalSupply,
+  getTotalSupplyAt,
   mintToken,
-  getOwner,
+  getController,
   transferToken,
+  transferTokenFrom,
+  approve,
+  getAllowance,
   importBalances,
   lockBalances
 } from '../scripts/tokenHelpers.js'
@@ -49,7 +54,6 @@ contract('proofToken', (accounts) => {
   let tokenSaleAddress
   let proofToken
   let proofPresaleToken
-  let proofPresaleTokenAddress
   let proofTokenAddress
 
   let fund = accounts[0]
@@ -57,7 +61,6 @@ contract('proofToken', (accounts) => {
   let receiver = accounts[2]
   let hacker = accounts[3]
   let wallet = accounts[4]
-  let proofWalletAddress = accounts[9]
 
   let startBlock
   let endBlock
@@ -67,9 +70,16 @@ contract('proofToken', (accounts) => {
     endBlock = web3.eth.blockNumber + 20
 
     proofPresaleToken = await ProofPresaleToken.new()
-    proofPresaleTokenAddress = await getAddress(proofPresaleToken)
 
-    proofToken = await ProofToken.new(proofPresaleTokenAddress, proofWalletAddress)
+    proofToken = await ProofToken.new(
+      '0x0',
+      '0x0',
+      0,
+      'Proof Token',
+      18,
+      'PRFT',
+      true)
+
     proofTokenAddress = await getAddress(proofToken)
 
     tokenSale = await TokenSale.new(
@@ -84,18 +94,11 @@ contract('proofToken', (accounts) => {
 
   describe('Initial State', function () {
     beforeEach(async function() {
-      await transferOwnership(proofToken, fund, tokenSaleAddress)
+      await transferControl(proofToken, fund, tokenSaleAddress)
     })
 
-    it('should start with a totalSupply equal to the number of presale tokens', async function() {
-      let totalSupply = await getTotalSupply(proofToken)
-      let presaleTotalSupply = await getTotalSupply(proofPresaleToken)
-
-      totalSupply.should.be.equal(presaleTotalSupply + TOKENS_ALLOCATED_TO_PROOF)
-    })
-
-    it('should be owned by token sale contract', async function() {
-      let proofTokenOwner = await getOwner(proofToken)
+    it('should initially be controlled by the token sale contract', async function() {
+      let proofTokenOwner = await getController(proofToken)
       proofTokenOwner.should.be.equal(tokenSaleAddress)
     })
 
@@ -144,17 +147,52 @@ contract('proofToken', (accounts) => {
 
       await writeData
       balances = balances.toNumber()
-      await importBalances(proofToken, proofPresaleToken, fund, addresses, balances)
 
-      for (let i = 0; i++; i < 10) {
-        let balance = await getTokenBalance(proofToken, addresses[index])
+      let addressListNumber = addresses.length
+
+      for (let i = 0; i < addressListNumber; i = i + 100) {
+        let addressesBatch = addresses.slice(i, i + 100)
+        let balancesBatch = balances.slice(i, i + 100)
+        await importBalances(proofToken, proofPresaleToken, fund, addressesBatch, balancesBatch)
+      }
+
+      for (let i = 0; i < 10; i++) {
+        let balance = await getTokenBalance(proofToken, addresses[i])
         balance.should.be.equal(balances[i])
       }
     })
 
+    it('have a total supply equal to the sum of the presale balances and proof tokens after importing', async function() {
+      let addresses = []
+      let balances = []
+
+      const writeData = new Promise((resolve, reject) => {
+        fs.createReadStream('./test/balances.csv')
+        .pipe(csv())
+        .on('data', function (data) {
+          addresses.push(data['address'])
+          balances.push(data['balance'])
+        })
+        .on('end', resolve)
+      })
+
+      await writeData
+      balances = balances.toNumber()
+
+      let addressListNumber = addresses.length
+      for (let i = 0; i < addressListNumber; i = i + 100) {
+        let addressesBatch = addresses.slice(i, i + 100)
+        let balancesBatch = balances.slice(i, i + 100)
+        await importBalances(proofToken, proofPresaleToken, fund, addressesBatch, balancesBatch)
+      }
+
+      let expectedSupply = TOKENS_ALLOCATED_TO_PROOF + balances.sum()
+      let supply = await getTotalSupply(proofToken)
+
+      supply.should.be.equal(expectedSupply)
+    })
 
     it('should not import balances if caller is not the owner of the contract', async function() {
-
       let addresses = []
       let balances = []
 
@@ -173,68 +211,21 @@ contract('proofToken', (accounts) => {
       await expectInvalidOpcode(importBalances(proofToken, proofPresaleToken, hacker, addresses, balances))
     })
 
-
-    it('can not lock the presale balances before the balances are imported', async function() {
-      await expectInvalidOpcode(lockBalances(proofToken, fund))
-    })
-
-    it('should have import flag set to false before the balances are imported', async function() {
-      let importFlag = await proofToken.presaleBalancesImported.call()
-      importFlag.should.be.false
-    })
-
-    it('should set import flag set to true after the balances are imported', async function() {
-      let addresses = []
-      let balances = []
-
-      const writeData = new Promise((resolve, reject) => {
-        fs.createReadStream('./test/balances.csv')
-        .pipe(csv())
-        .on('data', function(data) {
-          addresses.push(data['address'])
-          balances.push(data['balance'])
-        })
-        .on('end', resolve)
-      })
-
-      await writeData
-      balances = balances.toNumber()
-      await importBalances(proofToken, proofPresaleToken, fund, addresses, balances)
-
-      let importFlag = await proofToken.presaleBalancesImported.call()
-      importFlag.should.be.true
-    })
-
-    it('can lock the presale balances after the balances are imported', async function() {
-      let addresses = []
-      let balances = []
-
-      const writeData = new Promise((resolve, reject) => {
-        fs.createReadStream('./test/balances.csv')
-          .pipe(csv())
-          .on('data', function (data) {
-            addresses.push(data['address'])
-            balances.push(data['balance'])
-          })
-          .on('end', resolve)
-      })
-
-      await writeData
-      balances = balances.toNumber()
-      await importBalances(proofToken, proofPresaleToken, fund, addresses, balances)
-
-      for (let i = 0; i++; i < 10) {
-        let balance = await getTokenBalance(proofToken, addresses[index])
-        balance.should.be.equal(balances[i])
-      }
-
+    it('can lock the presale balances', async function() {
       await lockBalances(proofToken, fund).should.be.fulfilled
-
       let balancesLocked = await proofToken.presaleBalancesLocked.call()
       balancesLocked.should.be.true
     })
 
+    it('can not import presale balances after the presale balances are locked', async function () {
+      await lockBalances(proofToken, fund).should.be.fulfilled
+      let addresses = [hacker]
+      let balances = [100]
+      await expectInvalidOpcode(importBalances(proofToken, proofPresaleToken, fund, addresses, balances))
 
+      let balance = await getTokenBalance(proofToken, hacker)
+      balance.should.be.equal(0)
+    })
   })
 
   describe('Minting', function () {
@@ -254,7 +245,7 @@ contract('proofToken', (accounts) => {
     })
 
     it('should not be mintable by non-owner', async function() {
-      transferOwnership(proofToken, fund, tokenSaleAddress)
+      transferControl(proofToken, fund, tokenSaleAddress)
 
       let initialTokenBalance = await getTokenBalance(proofToken, receiver)
 
@@ -268,7 +259,7 @@ contract('proofToken', (accounts) => {
     })
 
     it('can not be stopped by non-owner', async function() {
-      transferOwnership(proofToken, fund, tokenSaleAddress)
+      transferControl(proofToken, fund, tokenSaleAddress)
 
       let params = { from: hacker, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
       await expectInvalidOpcode(proofToken.finishMinting(params))
@@ -303,9 +294,97 @@ contract('proofToken', (accounts) => {
       let params = { from: sender, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
       await expectInvalidOpcode(proofToken.transfer(receiver, 101, params))
     })
+
+    it('tokens should not be transferable to the token contract (by mistake)', async function() {
+      await mintToken(proofToken, fund, sender, 1000)
+      let params = { from: sender, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
+      await expectInvalidOpcode(proofToken.transfer(proofTokenAddress, 1000, params))
+    })
   })
 
-  describe('Token import', function () {
+  describe('Balances: ', function () {
+    it('balanceOf should return the proper token holder balance', async function() {
+      await mintToken(proofToken, fund, sender, 10000)
+      let balance = await getTokenBalance(proofToken, sender)
+      balance.should.be.equal(10000)
+    })
+
+    it('balanceOfAt should return token holder balance at a previous block', async function() {
+      let initialBlock = web3.eth.blockNumber
+      await mintToken(proofToken, fund, sender, 10000)
+      let currentBlock = web3.eth.blockNumber
+
+      let initialBalance = await getTokenBalanceAt(proofToken, sender, initialBlock)
+      let currentBalance = await getTokenBalanceAt(proofToken, sender, currentBlock)
+
+      initialBalance.should.be.equal(0)
+      currentBalance.should.be.equal(10000)
+    })
   })
 
+  describe('Total Supply: ', function () {
+    it('totalSupply should be increase when new tokens are created', async function() {
+      let initialSupply = await getTotalSupply(proofToken)
+      await mintToken(proofToken, fund, sender, 10 ** 24)
+
+      let supply = await getTotalSupply(proofToken)
+      let supplyIncrease = supply - initialSupply
+      supplyIncrease.should.be.equal(10 ** 24)
+    })
+
+    it('totalSupplyAt should correctly record total supply checkpoints', async function() {
+      let firstBlock = web3.eth.blockNumber
+      await mintToken(proofToken, fund, sender, 10000)
+      let secondBlock = web3.eth.blockNumber
+      await mintToken(proofToken, fund, sender, 10000)
+      let thirdBlock = web3.eth.blockNumber
+
+      let firstTotalSupply = await getTotalSupplyAt(proofToken, firstBlock)
+      let secondTotalSupply = await getTotalSupplyAt(proofToken, secondBlock)
+      let thirdTotalSupply = await getTotalSupplyAt(proofToken, thirdBlock)
+
+      firstTotalSupply.should.be.equal(0)
+      secondTotalSupply.should.be.equal(10000)
+      thirdTotalSupply.should.be.equal(20000)
+    })
+  })
+
+  describe('transferFrom: ', function () {
+    it('should throw if no allowance has been given', async function() {
+      await mintToken(proofToken, fund, sender, 1000)
+      await expectInvalidOpcode(transferTokenFrom(proofToken, fund, sender, receiver, 1000))
+    })
+
+    it('should return correct allowance balance after approve call', async function() {
+      await mintToken(proofToken, fund, sender, 1000)
+      await approve(proofToken, sender, receiver, 1000)
+
+      let allowance = await getAllowance(proofToken, sender, receiver)
+      allowance.should.be.equal(1000)
+    })
+
+    it('should allow transfer if amount is lower than allowance', async function() {
+      await mintToken(proofToken, fund, sender, 1000)
+      await approve(proofToken, sender, receiver, 1000)
+      await transferTokenFrom(proofToken, receiver, sender, receiver, 1000)
+
+      let receiverBalance = await getTokenBalance(proofToken, receiver)
+      let senderBalance = await getTokenBalance(proofToken, sender)
+
+      receiverBalance.should.be.equal(1000)
+      senderBalance.should.be.equal(0)
+    })
+
+    it('should return an exception if amount is higher than allowance', async function() {
+      await mintToken(proofToken, fund, sender, 1000)
+      await approve(proofToken, sender, receiver, 500)
+      await expectInvalidOpcode(transferTokenFrom(proofToken, receiver, sender, receiver, 501))
+
+      let receiverBalance = await getTokenBalance(proofToken, receiver)
+      let senderBalance = await getTokenBalance(proofToken, sender)
+
+      receiverBalance.should.be.equal(0)
+      senderBalance.should.be.equal(1000)
+    })
+  })
 })

@@ -35,6 +35,10 @@ import {
   transferOwnership
 } from '../scripts/ownershipHelpers.js'
 
+import {
+  transferControl
+} from '../scripts/controlHelpers.js'
+
 const assert = chai.assert
 const should = chai.should()
 const expect = chai.expect
@@ -66,7 +70,15 @@ contract('Crowdsale', (accounts) => {
     proofPresaleToken = await ProofPresaleToken.new()
     proofPresaleTokenAddress = await getAddress(proofPresaleToken)
 
-    proofToken = await ProofToken.new(proofPresaleTokenAddress, proofWalletAddress)
+    proofToken = await ProofToken.new(
+      '0x0',
+      '0x0',
+      0,
+      'Proof Token',
+      18,
+      'PRFT',
+      true)
+
     proofTokenAddress = await getAddress(proofToken)
 
     tokenSale = await TokenSale.new(
@@ -89,7 +101,7 @@ contract('Crowdsale', (accounts) => {
     })
 
     beforeEach(async function() {
-      await transferOwnership(proofToken, fund, tokenSaleAddress)
+      await transferControl(proofToken, fund, tokenSaleAddress)
       await advanceToBlock(startBlock)
     })
 

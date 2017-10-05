@@ -13,12 +13,32 @@ const getOwner = async (token) => {
 }
 
 /**
+ * @description Get owner of token contract
+ * @param token
+ * @returns owner
+ */
+const getController = async (token) => {
+  let controller = await token.controller.call()
+  return controller
+}
+
+/**
  * @description Get total supply of token contract
  * @param token
  * @returns total supply
  */
 const getTotalSupply = async (token) => {
   let tokenSupply = await token.totalSupply.call()
+  return tokenSupply.toNumber()
+}
+
+/**
+ * @description Get total supply of token contract
+ * @param token
+ * @returns total supply
+ */
+const getTotalSupplyAt = async (token, blockNumber) => {
+  let tokenSupply = await token.totalSupplyAt.call(blockNumber)
   return tokenSupply.toNumber()
 }
 
@@ -34,6 +54,18 @@ const getTokenBalance = async (token, owner) => {
 }
 
 /**
+ * @description Get token balance of owner
+ * @param token
+ * @param owner
+ * @returns token balance
+ */
+const getTokenBalanceAt = async (token, owner, blockNumber) => {
+  let balance = await token.balanceOfAt.call(owner, blockNumber)
+  return balance.toNumber()
+}
+
+
+/**
  * @description Transfer amount of token from sender to receiver
  * @param token
  * @param sender
@@ -44,6 +76,21 @@ const getTokenBalance = async (token, owner) => {
 const transferToken = async(token, sender, receiver, amount) => {
   let params = { from: sender, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
   let txn = await token.transfer(receiver, amount, params)
+  let txnReceipt = await h.waitUntilTransactionsMined(txn.tx)
+  return txnReceipt
+}
+
+/**
+ * @description Transfer amount of token from sender to receiver
+ * @param token
+ * @param caller
+ * @param receiver
+ * @param amount
+ * @returns transaction receipt
+ */
+const transferTokenFrom = async(token, caller, sender, receiver, amount) => {
+  let params = { from: caller, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
+  let txn = await token.transferFrom(sender, receiver, amount, params)
   let txnReceipt = await h.waitUntilTransactionsMined(txn.tx)
   return txnReceipt
 }
@@ -91,6 +138,21 @@ const finishMinting = async(token, sender) => {
 }
 
 /**
+ * @description Burn amount of tokens from the owner
+ * @param contract
+ * @param minter
+ * @param receiver
+ * @param amount
+ * @returns transaction receipt
+ */
+const burnTokens = async(contract, caller, owner, amount) => {
+  let params = { from: caller, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
+  let txn = await contract.burn(owner, amount, params)
+  let txnReceipt = await h.waitUntilTransactionsMined(txn.tx)
+  return txnReceipt
+}
+
+/**
  * @description Convert ERC20 units (=number of base units times 10^decimals) to base units
  * @param token
  * @param amount
@@ -120,7 +182,7 @@ const ERC20Units = async(token, amount) => {
  */
 const claimTokens = async(token, sender) => {
   let params = { from: sender, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
-  let txn = await token.claim(params)
+  let txn = await token.claimTokens(params)
   let txnReceipt = await h.waitUntilTransactionsMined(txn.tx)
   return txnReceipt
 }
@@ -145,17 +207,49 @@ const lockBalances = async(token, caller) => {
   return txnReceipt
 }
 
+const cloneToken = async(token, caller, config) => {
+  let txn = await token.createCloneToken(
+    config.name,
+    config.decimals,
+    config.symbol,
+    config.block,
+    config.transfersEnabled,
+    { from: caller })
+
+  let txnReceipt = await h.waitUntilTransactionsMined(txn.tx)
+  return txnReceipt
+}
+
+const approve = async(token, caller, spender, amount) => {
+  let txn = await token.approve(spender, amount, {from: caller })
+  let txnReceipt = await h.waitUntilTransactionsMined(txn.tx)
+  return txnReceipt
+}
+
+const getAllowance = async(token, owner, spender) => {
+  let allowance = await token.allowance.call(owner, spender)
+  return allowance.toNumber()
+}
+
 module.exports = {
   getOwner,
+  getController,
   getTotalSupply,
+  getTotalSupplyAt,
   getTokenBalance,
+  getTokenBalanceAt,
   transferToken,
+  transferTokenFrom,
   transferTokens,
   mintToken,
+  burnTokens,
   finishMinting,
   baseUnits,
   ERC20Units,
   claimTokens,
   importBalances,
-  lockBalances
+  lockBalances,
+  cloneToken,
+  approve,
+  getAllowance
 }
