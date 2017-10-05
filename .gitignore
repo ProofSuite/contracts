@@ -57,3 +57,6 @@ typings/
 # dotenv environment variables file
 .env
 
+# node xml requests
+.node-xmlhttprequest-sync*
+
