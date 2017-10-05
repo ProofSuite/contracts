@@ -1,10 +1,9 @@
-// Allows us to use ES6 in our migrations and tests.
-// Not quite sure this is necessary
-
-var config = require('./scripts/testConfig')
+var config = require('./config')
 
 require('babel-register')
 require('babel-polyfill')
+
+const LightWalletProvider = require('@digix/truffle-lightwallet-provider')
 
 module.exports = {
   networks: {
@@ -12,32 +11,24 @@ module.exports = {
       host: 'localhost',
       port: 8545,
       network_id: '*',
-      gas: config.MAX_GAS,
+      gas: config.constants.MAX_GAS,
       from: '0xdf08f82de32b8d460adbe8d72043e3a7e25a3b39'  // testprc main account here
     },
-    testnet: {
-      host: 'localhost',
-      port: 8545,
-      network_id: 3,
-      gas: config.MAX_GAS,
-      gasPrice: config.DEFAULT_HIGH_GAS_PRICE,
-      from: '0x38ef4f14eaced72a030c2a3588210b83b0e4944a'     // ethereum testnet (ex: ropsten) main account
+    ethereum: {
+      provider: new LightWalletProvider({
+        keystore: '/Users/davidvanisacker/.sigmate/sigmate-v3-tokensale-mainnet.json',
+        password: 'fakepw',
+        rpcUrl: config.infura.ethereum
+      }),
+      network_id: '1'
     },
-    rinkeby: {
-      host: 'localhost',
-      port: 8545,
-      network_id: 4,
-      gas: config.MAX_GAS,
-      gasPrice: config.DEFAULT_HIGH_GAS_PRICE,
-      from: ''
-    },
-    mainnet: {
-      host: 'localhost',
-      port: 8545,
-      network_id: 1,
-      gas: config.MAX_GAS,
-      gasPrice: config.DEFAULT_HIGH_GAS_PRICE,
-      from: '0xdf08f82de32b8d460adbe8d72043e3a7e25a3b39'     // ethereum mainnet main account
+    ropsten: {
+      provider: new LightWalletProvider({
+        keystore: '/Users/davidvanisacker/.sigmate/sigmate-v3-tokensale-ropsten.json',
+        password: 'fakepw',
+        rpcUrl: config.infura.ropsten
+      }),
+      network_id: '3'
     }
   }
 }
