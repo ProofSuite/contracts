@@ -25,10 +25,18 @@ module.exports = {
     ropsten: {
       provider: new LightWalletProvider({
         keystore: '/Users/davidvanisacker/.sigmate/sigmate-v3-tokensale-ropsten.json',
-        password: 'fakepw',
+        password: 'popcorn123!',
         rpcUrl: config.infura.ropsten
       }),
       network_id: '3'
+    },
+    rinkeby: {
+      provider: new LightWalletProvider({
+        keystore: '/Users/davidvanisacker/.sigmate/sigmate-v3-tokensale-rinkeby.json',
+        password: 'popcorn123!',
+        rpcUrl: config.infura.rinkeby
+      }),
+      network_id: '4'
     }
   }
 }

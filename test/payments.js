@@ -201,22 +201,6 @@ contract('Crowdsale', (accounts) => {
       await advanceToBlock(startBlock)
     })
 
-    it('should not throw if purchase hits just below the cap', async function() {
-      let cap = await getCap(tokenSale)
-      let priceInWei = await getPriceInWei(tokenSale)
-      let initialBalance = await getTokenBalance(proofToken, sender)
-
-      let amount = cap * priceInWei - 1
-      let expectedTokens = await numberOfTokensFor(tokenSale, amount)
-
-      await buyTokens(tokenSale, sender, amount)
-
-      let balance = await getTokenBalance(proofToken, sender)
-      let balanceIncrease = balance - initialBalance
-
-      expect(balanceIncrease).almost.equal(expectedTokens, 3)
-    })
-
     it('should throw if the number of tokens exceeds the cap', async function() {
       let cap = await getCap(tokenSale)
       let priceInWei = await getPriceInWei(tokenSale)

@@ -8,7 +8,7 @@ chai.use(chaiAsPromised).use(chaiBigNumber).use(chaiStats).should()
 import { getAddress,
          expectInvalidOpcode } from '../scripts/helpers.js'
 
-import { transferControl } from '../scripts/controlHelpers.js'
+import { transferOwnership } from '../scripts/ownershipHelpers.js'
 
 const assert = chai.assert
 const should = chai.should()
@@ -63,22 +63,22 @@ contract('Crowdsale', (accounts) => {
 
   describe('Ownership', function () {
     it('should initially belong to contract caller', async function() {
-      let controller = await tokenSale.controller.call()
-      assert.equal(controller, fund)
+      let owner = await tokenSale.owner.call()
+      assert.equal(owner, fund)
     })
 
     it('should be transferable to another account', async function() {
-      let controller = await tokenSale.controller.call()
-      await transferControl(tokenSale, controller, receiver)
-      let newOwner = await tokenSale.controller.call()
+      let owner = await tokenSale.owner.call()
+      await transferOwnership(tokenSale, owner, receiver)
+      let newOwner = await tokenSale.owner.call()
       assert.equal(newOwner, receiver)
     })
 
-    it('should not be transferable by non-controller', async function() {
-      let controller = await tokenSale.controller.call()
-      await expectInvalidOpcode(transferControl(tokenSale, hacker1, hacker2))
-      const newOwner = await tokenSale.controller.call()
-      assert.equal(controller, newOwner)
+    it('should not be transferable by non-owner', async function() {
+      let owner = await tokenSale.owner.call()
+      await expectInvalidOpcode(transferOwnership(tokenSale, hacker1, hacker2))
+      const newOwner = await tokenSale.owner.call()
+      assert.equal(owner, newOwner)
     })
   })
 })

@@ -139,14 +139,6 @@ contract('Crowdsale', (accounts) => {
 
       tokenSaleAddress = await getAddress(tokenSale)
     })
-
-    it('should have an initial supply equal to the presale token supply', async function() {
-      let supply = await tokenSale.totalSupply.call()
-      supply = await baseUnits(proofToken, supply.toNumber())
-      let expectedSupply = await baseUnits(proofToken, 10000 + TOKENS_ALLOCATED_TO_PROOF)
-
-      supply.should.be.bignumber.equal(expectedSupply)
-    })
   })
 
   describe('Finalized state', function () {

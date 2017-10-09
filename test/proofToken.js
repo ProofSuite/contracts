@@ -1,3 +1,5 @@
+require('babel-register')
+require('babel-polyfill')
 require('../scripts/jsHelpers.js')
 
 const fs = require('fs')
@@ -188,7 +190,6 @@ contract('proofToken', (accounts) => {
 
       let expectedSupply = TOKENS_ALLOCATED_TO_PROOF + balances.sum()
       let supply = await getTotalSupply(proofToken)
-
       supply.should.be.equal(expectedSupply)
     })
 
@@ -386,5 +387,6 @@ contract('proofToken', (accounts) => {
       receiverBalance.should.be.equal(0)
       senderBalance.should.be.equal(1000)
     })
+
   })
 })

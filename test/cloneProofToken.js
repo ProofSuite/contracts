@@ -52,14 +52,17 @@ const expect = chai.expect
 const ProofPresaleToken = artifacts.require('./ProofPresaleToken.sol')
 const ProofToken = artifacts.require('./ProofToken.sol')
 const TokenSale = artifacts.require('./TokenSale.sol')
+const TokenFactory = artifacts.require('./TokenFactory.sol')
 
-contract('proofToken', (accounts) => {
+contract('cloneProofToken', (accounts) => {
   let tokenSale
   let tokenSaleAddress
   let proofToken
+  let proofTokenFactory
   let proofPresaleToken
   let proofPresaleTokenAddress
   let proofTokenAddress
+  let proofTokenFactoryAddress
 
   let fund = accounts[0]
   let sender = accounts[1]
@@ -78,22 +81,26 @@ contract('proofToken', (accounts) => {
     proofPresaleToken = await ProofPresaleToken.new()
     proofPresaleTokenAddress = await getAddress(proofPresaleToken)
 
+    proofTokenFactory = await TokenFactory.new()
+    proofTokenFactoryAddress = await getAddress(proofTokenFactory)
+
     proofToken = await ProofToken.new(
-      '0x0',
+      proofTokenFactoryAddress,
       '0x0',
       0,
       'Proof Token',
       18,
       'PRFT',
-      true)
+      true
+    )
 
     proofTokenAddress = await getAddress(proofToken)
+
   })
 
   describe('Clone token', function () {
     it('should be able to clone token', async function () {
       let controller = await getController(proofToken)
-
       let config = {
         name:'Proof Token',
         decimals: 18,

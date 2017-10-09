@@ -1,10 +1,10 @@
 pragma solidity ^0.4.13;
 
 import './SafeMath.sol';
-import './ProofPresaleTokenInterface.sol';
-import './ControllerInterface.sol';
 import './Controllable.sol';
 import './CallFallback.sol';
+import './ProofPresaleTokenInterface.sol';
+import './ControllerInterface.sol';
 import './TokenFactoryInterface.sol';
 
 /**
@@ -14,10 +14,10 @@ import './TokenFactoryInterface.sol';
  * Based on code by FirstBlood:
  * https://github.com/Firstbloodio/token/blob/master/smart_contract/FirstBloodToken.sol
  */
-contract ProofToken is Controllable {
+contract ProofTokenInterface is Controllable {
 
   using SafeMath for uint256;
-  ProofToken public parentToken;
+  ProofTokenInterface public parentToken;
   TokenFactoryInterface public tokenFactory;
   ProofPresaleTokenInterface public presale;
 

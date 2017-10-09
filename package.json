@@ -43,6 +43,7 @@
     "webpack-dev-server": "^2.3.0"
   },
   "dependencies": {
+    "@digix/truffle-lightwallet-provider": "~0.1.2",
     "bluebird": "~3.5.0",
     "chai": "~4.1.2",
     "chai-as-promised": "~7.1.1",
