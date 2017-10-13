@@ -17,22 +17,14 @@
           "type": "string"
         },
         {
-          "name": "_decimalUnits",
-          "type": "uint8"
-        },
-        {
           "name": "_tokenSymbol",
           "type": "string"
-        },
-        {
-          "name": "_transfersEnabled",
-          "type": "bool"
         }
       ],
       "name": "createCloneToken",
       "outputs": [
         {
-          "name": "",
+          "name": "newToken",
           "type": "address"
         }
       ],
@@ -43,5 +35,5 @@
   "unlinked_binary": "0x",
   "networks": {},
   "schema_version": "0.0.5",
-  "updated_at": 1507535703765
+  "updated_at": 1507875040951
 }

@@ -194,9 +194,9 @@ const claimTokens = async(token, sender) => {
  * @param balances
  * @returns transaction receipt
  */
-const importBalances = async(token, presaleToken, caller, addresses, balances) => {
+const importBalances = async(token, presaleToken, caller, addresses, balances, wallet) => {
   let presaleTokenAddress = await getAddress(presaleToken)
-  let txn = await token.importPresaleBalances(addresses, balances, presaleTokenAddress, { from: caller, gas: MAX_GAS })
+  let txn = await token.importPresaleBalances(addresses, balances, presaleTokenAddress, wallet, { from: caller, gas: MAX_GAS })
   let txnReceipt = await h.waitUntilTransactionsMined(txn.tx)
   return txnReceipt
 }

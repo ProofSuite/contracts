@@ -1,4 +1,4 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.14;
 
 import './ProofToken.sol';
 
@@ -8,8 +8,6 @@ contract TokenFactoryInterface {
         address _parentToken,
         uint _snapshotBlock,
         string _tokenName,
-        uint8 _decimalUnits,
-        string _tokenSymbol,
-        bool _transfersEnabled
-      ) returns (ProofToken);
+        string _tokenSymbol
+      ) returns (ProofToken newToken);
 }

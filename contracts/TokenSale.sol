@@ -1,19 +1,19 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.14;
 
 import './SafeMath.sol';
-import './ProofToken.sol';
 import './Pausable.sol';
-
+import './ProofTokenInterface.sol';
 /**
  * @title Tokensale
  * Tokensale allows investors to make token purchases and assigns them tokens based
+
  * on a token per ETH rate. Funds collected are forwarded to a wallet as they arrive.
  */
 contract TokenSale is Pausable {
 
   using SafeMath for uint256;
 
-  ProofToken public proofToken;
+  ProofTokenInterface public proofToken;
   address public wallet;
   uint256 public weiRaised;
   uint256 public cap;
@@ -38,6 +38,9 @@ contract TokenSale is Pausable {
    * @param amount amount of tokens purchased
    */
   event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
+  event NewCloneToken(address indexed _cloneToken, uint _snapshotBlock);
+  event OnTransfer(address _from, address _to, uint _amount);
+  event OnApprove(address _owner, address _spender, uint _amount);
 
   /**
    * event for signaling finished crowdsale
@@ -48,7 +51,7 @@ contract TokenSale is Pausable {
     address _wallet,
     address _tokenAddress,
     uint256 _startBlock,
-    uint256 _endBlock){
+    uint256 _endBlock) {
     require(_wallet != 0x0);
     require(_tokenAddress != 0x0);
     require(_startBlock > 0);
@@ -57,7 +60,7 @@ contract TokenSale is Pausable {
     wallet = _wallet;
     startBlock = _startBlock;
     endBlock = _endBlock;
-    proofToken = ProofToken(_tokenAddress);
+    proofToken = ProofTokenInterface(_tokenAddress);
 
     uint256 allocatedTokens = proofToken.totalSupply();
     uint256 remainingTokens = TOTAL_TOKENS - allocatedTokens;
@@ -118,19 +121,28 @@ contract TokenSale is Pausable {
 
   //controller interface
 
-  function proxyPayment(address _owner) payable public {
-    revert();
-  }
+  // function proxyPayment(address _owner) payable public {
+  //   revert();
+  // }
 
   function onTransfer(address _from, address _to, uint _amount) public returns (bool) {
+    OnTransfer(_from, _to, _amount);
     return true;
   }
 
   function onApprove(address _owner, address _spender, uint _amount) public returns (bool) {
-    // No approve/transferFrom during the sale
-    return false;
+    OnApprove(_owner, _spender, _amount);
+    return true;
   }
 
+  function createCloneToken(uint _snapshotBlock, string _cloneTokenName, string _cloneTokenSymbol) public onlyOwner {
+    address cloneTokenAddress = proofToken.createCloneToken(_snapshotBlock, _cloneTokenName, _cloneTokenSymbol);
+    NewCloneToken(cloneTokenAddress, _snapshotBlock);
+  }
+
+  function changeController(address newController) public onlyOwner {
+    proofToken.transferControl(newController);
+  }
 
   /**
   @dev Not sure if this function is actually effective. From my understanding, the number of wei

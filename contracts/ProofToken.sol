@@ -1,11 +1,12 @@
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.14;
 
 import './SafeMath.sol';
-import './ProofPresaleTokenInterface.sol';
-import './ControllerInterface.sol';
 import './Controllable.sol';
 import './CallFallback.sol';
+import './ControllerInterface.sol';
+import './ProofPresaleTokenInterface.sol';
 import './TokenFactoryInterface.sol';
+import './ProofTokenInterface.sol';
 
 /**
  * @title ProofToken (PRFT)
@@ -17,13 +18,10 @@ import './TokenFactoryInterface.sol';
 contract ProofToken is Controllable {
 
   using SafeMath for uint256;
-  ProofToken public parentToken;
+  ProofTokenInterface public parentToken;
   TokenFactoryInterface public tokenFactory;
   ProofPresaleTokenInterface public presale;
 
-  // string public constant name = "Proof Token";
-  // string public constant symbol = "PRFT";
-  // uint8 public constant decimals = 18;
   string public name;
   string public symbol;
   uint8 public decimals;
@@ -42,7 +40,6 @@ contract ProofToken is Controllable {
 
   Checkpoint[] totalSupplyHistory;
 
-  address public proofTokenWallet;
   bool public mintingFinished = false;
   bool public presaleBalancesLocked = false;
 
@@ -61,19 +58,16 @@ contract ProofToken is Controllable {
     address _parentToken,
     uint256 _parentSnapShotBlock,
     string _tokenName,
-    uint8 _decimalUnits,
-    string _tokenSymbol,
-    bool _transfersEnabled
+    string _tokenSymbol
     ) {
       tokenFactory = TokenFactoryInterface(_tokenFactory);
-      parentToken = ProofToken(_parentToken);
-      name = _tokenName;                                 // Set the name
-      decimals = _decimalUnits;                          // Set the decimals
-      symbol = _tokenSymbol;                             // Set the symbol
-      transfersEnabled = _transfersEnabled;
+      parentToken = ProofTokenInterface(_parentToken);
       parentSnapShotBlock = _parentSnapShotBlock;
+      name = _tokenName;
+      symbol = _tokenSymbol;
+      decimals = 18;
+      transfersEnabled = true;
       creationBlock = block.number;
-      proofTokenWallet = 0xE2b3204F29Ab45d5fd074Ff02aDE098FbC381D42;
 
   }
 
@@ -247,7 +241,7 @@ contract ProofToken is Controllable {
    * @param _presaleAddress To import the presale token total supply
    * @return A boolean that indicates if the operation was successful.
    */
-  function importPresaleBalances(address[] _addresses, uint256[] _balances, address _presaleAddress) onlyController returns (bool) {
+  function importPresaleBalances(address[] _addresses, uint256[] _balances, address _presaleAddress, address _proofTokenWallet) onlyController returns (bool) {
     require(presaleBalancesLocked == false);
 
 
@@ -256,7 +250,7 @@ contract ProofToken is Controllable {
       Transfer(0, _addresses[i], _balances[i]);
     }
 
-    updateValueAtNow(balances[proofTokenWallet], TOKENS_ALLOCATED_TO_PROOF);
+    updateValueAtNow(balances[_proofTokenWallet], TOKENS_ALLOCATED_TO_PROOF);
 
     presale = ProofPresaleTokenInterface(_presaleAddress);
     updateValueAtNow(totalSupplyHistory, TOKENS_ALLOCATED_TO_PROOF + presale.totalSupply());
@@ -335,11 +329,9 @@ contract ProofToken is Controllable {
   }
 
   function createCloneToken(
-        string _cloneTokenName,
-        uint8 _cloneDecimalUnits,
-        string _cloneTokenSymbol,
         uint _snapshotBlock,
-        bool _transfersEnabled
+        string _cloneTokenName,
+        string _cloneTokenSymbol
         ) onlyController returns(address)
      {
 
@@ -351,10 +343,8 @@ contract ProofToken is Controllable {
           this,
           _snapshotBlock,
           _cloneTokenName,
-          _cloneDecimalUnits,
-          _cloneTokenSymbol,
-          _transfersEnabled
-          );
+          _cloneTokenSymbol
+        );
 
       cloneToken.transferControl(msg.sender);
 
