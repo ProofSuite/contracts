@@ -56,9 +56,29 @@ const getCap = async (tokenSale) => {
  * @param tokenSale {Object} - Truffle Contract Object
  * @returns token price in wei {String}
  */
-const getPriceInWei = async (tokenSale) => {
-  let priceInWei = await tokenSale.priceInWei.call()
+const getBasePriceInWei = async (tokenSale) => {
+  let priceInWei = await tokenSale.basePriceInWei.call()
   return priceInWei.toNumber()
+}
+
+const getBasePrice = async (tokenSale) => {
+  let price = await getBasePriceInWei(tokenSale)
+  return (price / 10 ** 18)
+}
+
+const getPriceInWei = async (tokenSale) => {
+  let priceInWei = await tokenSale.getPriceInWei.call()
+  return priceInWei.toNumber()
+}
+
+const getPrice = async (tokenSale) => {
+  let price = await getPriceInWei(tokenSale)
+  return (price / 10 ** 18)
+}
+
+const getRemainingTokens = async (tokenSale) => {
+  let remainingTokens = await tokenSale.remainingTokens.call()
+  return remainingTokens.toNumber()
 }
 
 /**
@@ -89,7 +109,7 @@ const buyTokens = async (tokenSale, sender, value) => {
  * @returns token price in wei {Number}
  */
 const tokenPriceInWei = async (tokenSale) => {
-  let price = await tokenSale.priceInWei.call()
+  let price = await tokenSale.getPriceInWei.call()
   return price.toNumber()
 }
 
@@ -100,7 +120,7 @@ const tokenPriceInWei = async (tokenSale) => {
  * @returns token price in ether {Number}
  */
 const tokenPrice = async (tokenSale) => {
-  let price = await tokenSale.priceInWei.call()
+  let price = await getPriceInWei(tokenSale)
   return (price.toNumber() / ether)
 }
 
@@ -132,6 +152,9 @@ module.exports = {
   tokenPriceInWei,
   pointsMultiplier,
   numberOfTokensFor,
+  getBasePrice,
+  getBasePriceInWei,
+  getPrice,
   getPriceInWei,
   getCap,
   finalize

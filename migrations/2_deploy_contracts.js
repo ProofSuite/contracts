@@ -21,6 +21,10 @@ module.exports = function(deployer) {
       wallet = config.addresses.rinkeby.WALLET_ADDRESS
       gas = config.constants.MAX_GAS
       gasPrice = config.constants.DEFAULT_GAS_PRICE
+    } else if (deployer.network == "development") {
+      wallet = config.addresses.development.WALLET_ADDRESS
+      gas = config.constants.MAX_GAS
+      gasPrice = config.constants.DEFAULT_GAS_PRICE
     } else {
       throw new Error("Wallet not set")
     }

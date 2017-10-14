@@ -17,7 +17,7 @@ module.exports = {
     ethereum: {
       provider: new LightWalletProvider({
         keystore: '/Users/davidvanisacker/.sigmate/sigmate-v3-tokensale-mainnet.json',
-        password: 'popcorn123!',
+        password: '*********',
         rpcUrl: config.infura.ethereum
       }),
       network_id: '1'
@@ -34,8 +34,7 @@ module.exports = {
       provider: new LightWalletProvider({
         keystore: '/Users/davidvanisacker/.sigmate/sigmate-v3-tokensale-rinkeby.json',
         password: 'popcorn123!',
-        rpcUrl: config.infura.rinkeby,
-        debug: true
+        rpcUrl: config.infura.rinkeby
       }),
       network_id: '4'
     }

@@ -16,19 +16,34 @@ contract TokenSale is Pausable {
   ProofTokenInterface public proofToken;
   address public wallet;
   uint256 public weiRaised;
-  uint256 public cap;
   uint256 public rate;
-  uint256 public priceInWei;
   uint256 public decimalsMultiplier;
   uint256 public initialSupply;
   uint256 public startBlock;
   uint256 public endBlock;
+  uint256 public remainingTokens;
+  uint256 public allocatedTokens;
   address public proofWallet;
   bool public finalized;
 
+  uint256 public basePriceInWei = 88000000000000000;
   uint256 public constant TOTAL_TOKENS = 2 * 1181031 * (10 ** 18);
   uint256 public constant PUBLIC_TOKENS = 1181031 * (10 ** 18);
   uint256 public constant TOKENS_ALLOCATED_TO_PROOF = 1181031 * (10 ** 18);
+  uint256 public constant TOTAL_PRESALE_TOKENS = 112386712924725508802400;
+
+
+  uint256 public capInBaseUnits = TOTAL_TOKENS - TOTAL_PRESALE_TOKENS;
+  uint256 public cap = capInBaseUnits / (10 ** 18);
+  uint256 public capInWei = cap * basePriceInWei;
+
+  uint256 public firstCheckpoint = (capInWei * 5) / 100;
+  uint256 public secondCheckpoint = (capInWei * 15) / 100;   //15% of tokens sold
+  uint256 public thirdCheckpoint = (capInWei * 25) / 100;    //25% of tokens sold
+
+  uint256 public firstCheckpointPrice = (basePriceInWei * 80) / 100;
+  uint256 public secondCheckpointPrice = (basePriceInWei * 90) / 100;
+  uint256 public thirdCheckpointPrice = (basePriceInWei * 95) / 100;
 
   /**
    * event for token purchase logging
@@ -41,6 +56,7 @@ contract TokenSale is Pausable {
   event NewCloneToken(address indexed _cloneToken, uint _snapshotBlock);
   event OnTransfer(address _from, address _to, uint _amount);
   event OnApprove(address _owner, address _spender, uint _amount);
+  event LogInt(string _name, uint256 _value);
 
   /**
    * event for signaling finished crowdsale
@@ -62,13 +78,8 @@ contract TokenSale is Pausable {
     endBlock = _endBlock;
     proofToken = ProofTokenInterface(_tokenAddress);
 
-    uint256 allocatedTokens = proofToken.totalSupply();
-    uint256 remainingTokens = TOTAL_TOKENS - allocatedTokens;
 
-
-    priceInWei = 88000000000000000;
     decimalsMultiplier = (10 ** 18);
-    cap = remainingTokens / (10 ** 18);
   }
 
 
@@ -79,6 +90,24 @@ contract TokenSale is Pausable {
     buyTokens(msg.sender);
   }
 
+  function getPriceInWei() public returns (uint256) {
+
+    uint256 price;
+
+    if (weiRaised < firstCheckpoint) {
+      price = firstCheckpointPrice;
+    } else if (weiRaised < secondCheckpoint) {
+      price = secondCheckpointPrice;
+    } else if (weiRaised < thirdCheckpoint) {
+      price = thirdCheckpointPrice;
+    } else {
+      price = basePriceInWei;
+    }
+
+    return price;
+  }
+
+
   /**
    * Low level token purchase function
    * @param beneficiary will recieve the tokens.
@@ -88,10 +117,12 @@ contract TokenSale is Pausable {
     require(validPurchase());
 
     uint256 weiAmount = msg.value;
-    weiRaised = weiRaised.add(weiAmount);
+    uint256 priceInWei = getPriceInWei();
     uint256 tokens = weiAmount.mul(decimalsMultiplier).div(priceInWei);
 
+    weiRaised = weiRaised.add(weiAmount);
     proofToken.mint(beneficiary, tokens);
+
     TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
     forwardFunds();
   }
@@ -106,7 +137,8 @@ contract TokenSale is Pausable {
     bool withinPeriod = current >= startBlock && current <= endBlock;
     uint256 weiAmount = weiRaised.add(msg.value);
     bool nonZeroPurchase = msg.value != 0;
-    bool withinCap = cap.mul(priceInWei) >= weiAmount;
+    bool withinCap = cap.mul(basePriceInWei) >= weiAmount;  //probably needs to be updated
+
     return withinCap && nonZeroPurchase && withinPeriod;
   }
 

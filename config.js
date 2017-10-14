@@ -9,7 +9,7 @@ let config = {
     DEFAULT_GAS: 2 * 10 ** 6,
     MAX_GAS: 3.8 * 10 ** 6,
     DEFAULT_LOW_GAS_PRICE: 5 * 10 ** 9,
-    DEFAULT_GAS_PRICE: 20 * 10 ** 9,
+    DEFAULT_GAS_PRICE: 40 * 10 ** 9,
     DEFAULT_HIGH_GAS_PRICE: 40 * 10 ** 9,
     TOKENS_ALLOCATED_TO_PROOF: 1181031 * (10 ** 18),
     DECIMALS_POINTS: 10 ** 18,

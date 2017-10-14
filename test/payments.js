@@ -22,10 +22,9 @@ import { getTotalSupply,
 import { buyTokens,
          numberOfTokensFor,
          getWallet,
+         getBasePriceInWei,
          getPriceInWei,
          getCap } from '../scripts/tokenSaleHelpers.js'
-
-import { transferOwnership } from '../scripts/ownershipHelpers.js'
 
 import { transferControl } from '../scripts/controlHelpers.js'
 
@@ -33,7 +32,6 @@ const assert = chai.assert
 const should = chai.should()
 const expect = chai.expect
 
-const ProofPresaleToken = artifacts.require('./ProofPresaleToken.sol')
 const ProofToken = artifacts.require('./ProofToken.sol')
 const TokenSale = artifacts.require('./TokenSale.sol')
 
@@ -42,23 +40,16 @@ contract('Crowdsale', (accounts) => {
   let tokenSale
   let tokenSaleAddress
   let proofToken
-  let proofPresaleToken
-  let proofPresaleTokenAddress
   let proofTokenAddress
   let sender = accounts[1]
   let wallet = accounts[5]
-  let proofWalletAddress = accounts[9]
 
   let startBlock
   let endBlock
 
   beforeEach(async function() {
-
     startBlock = web3.eth.blockNumber + 10
     endBlock = web3.eth.blockNumber + 20
-
-    proofPresaleToken = await ProofPresaleToken.new()
-    proofPresaleTokenAddress = await getAddress(proofPresaleToken)
 
     proofToken = await ProofToken.new(
       '0x0',
@@ -147,7 +138,7 @@ contract('Crowdsale', (accounts) => {
       expect(supplyIncrease).to.almost.equal(expectedSupplyIncrease)
     })
 
-    it('should increase total supply by 11.36 for 10 ether raised', async function() {
+    it('should increase total supply by 14.204 for 10 ether raised', async function() {
       let initialTotalSupply = await getTotalSupply(proofToken)
 
       await buyTokens(tokenSale, sender, 1 * ether)
@@ -156,7 +147,7 @@ contract('Crowdsale', (accounts) => {
       let supplyIncrease = (totalSupply - initialTotalSupply)
       supplyIncrease = await baseUnits(proofToken, supplyIncrease)
 
-      expect(supplyIncrease).almost.equal(11.363636363636)
+      expect(supplyIncrease).almost.equal(14.20454545)
     })
 
     it('should transfer money to the wallet after receiving investment', async function() {
@@ -183,7 +174,7 @@ contract('Crowdsale', (accounts) => {
       expect(balanceIncrease).to.almost.equal(expectedBalanceIncrease)
     })
 
-    it('should increase buyer balance by X for 10 ether invested', async function() {
+    it('should increase buyer balance by 14.20454545 for 10 ether invested', async function() {
       let initialTokenBalance = await getTokenBalance(proofToken, sender)
 
       await buyTokens(tokenSale, sender, 1 * ether)
@@ -191,7 +182,59 @@ contract('Crowdsale', (accounts) => {
       let tokenBalance = await getTokenBalance(proofToken, sender)
       let balanceIncrease = (tokenBalance - initialTokenBalance)
       balanceIncrease = await baseUnits(proofToken, balanceIncrease)
-      expect(balanceIncrease).almost.equal(11.363636363636)
+      expect(balanceIncrease).almost.equal(14.20454545)
+    })
+  })
+
+  describe('Price', function () {
+
+    beforeEach(async function() {
+      await transferControl(proofToken, fund, tokenSaleAddress)
+      await advanceToBlock(startBlock)
+    })
+
+    it('should initially return 20% premium price', async function() {
+      let price = await getPriceInWei(tokenSale)
+      let expectedPrice = 70400000000000000
+      price.should.be.equal(expectedPrice)
+    })
+
+    it('should return 10% premium price after 5% of the tokens have been bought', async function() {
+      let basePriceInWei = await getBasePriceInWei(tokenSale)
+      let cap = await getCap(tokenSale)
+      let capInWei = cap * basePriceInWei
+      let investment = 0.05 * capInWei
+      await buyTokens(tokenSale, sender, investment)
+
+      let priceInWei = await getPriceInWei(tokenSale)
+      let expectedPrice = 79200000000000000
+      priceInWei.should.be.equal(expectedPrice)
+    })
+
+    it('should return 5% premium price after 15% of the tokens have been bought', async function() {
+      let basePriceInWei = await getBasePriceInWei(tokenSale)
+      let cap = await getCap(tokenSale)
+      let capInWei = cap * basePriceInWei
+      let investment = 0.15 * capInWei
+
+      await buyTokens(tokenSale, sender, investment)
+
+      let priceInWei = await getPriceInWei(tokenSale)
+      let expectedPrice = 83600000000000000
+      priceInWei.should.be.equal(expectedPrice)
+    })
+
+    it('should return full price after 25% of the tokens have been sold', async function() {
+      let basePriceInWei = await getBasePriceInWei(tokenSale)
+      let cap = await getCap(tokenSale)
+      let capInWei = cap * basePriceInWei
+      let investment = 0.25 * capInWei
+
+      await buyTokens(tokenSale, sender, investment)
+
+      let priceInWei = await getPriceInWei(tokenSale)
+      let expectedPrice = 88000000000000000
+      priceInWei.should.be.equal(expectedPrice)
     })
   })
 
@@ -201,12 +244,60 @@ contract('Crowdsale', (accounts) => {
       await advanceToBlock(startBlock)
     })
 
-    it('should throw if the number of tokens exceeds the cap', async function() {
+    it('should offer 14.20 tokens for 1 ether invested if less than 5% of the tokens were sold', async function() {
+      let initialTokenBalance = await getTokenBalance(proofToken, sender)
+
+      await buyTokens(tokenSale, sender, 1 * ether)
+
+      let tokenBalance = await getTokenBalance(proofToken, sender)
+      let balanceIncrease = (tokenBalance - initialTokenBalance)
+      balanceIncrease = await baseUnits(proofToken, balanceIncrease)
+      let expectedBalanceIncrease = 14.204545454545
+      expect(balanceIncrease).almost.equal(expectedBalanceIncrease)
+    })
+
+    it('should offer 12.62 tokens for 1 ether invested if less than 15% of the tokens were sold', async function() {
+      let basePriceInWei = await getBasePriceInWei(tokenSale)
       let cap = await getCap(tokenSale)
-      let priceInWei = await getPriceInWei(tokenSale)
+      let capInWei = cap * basePriceInWei
+      let investment = 0.14 * capInWei
+      await buyTokens(tokenSale, fund, investment)
+
+      let initialTokenBalance = await getTokenBalance(proofToken, sender)
+
+      await buyTokens(tokenSale, sender, 1 * ether)
+
+      let tokenBalance = await getTokenBalance(proofToken, sender)
+      let balanceIncrease = (tokenBalance - initialTokenBalance)
+      balanceIncrease = await baseUnits(proofToken, balanceIncrease)
+      let expectedBalanceIncrease = 12.6262626262
+      expect(balanceIncrease).almost.equal(expectedBalanceIncrease)
+    })
+
+    it('should offer 11.96 tokens for 1 ether invested if less than 25% of the tokens were sold', async function() {
+      let basePriceInWei = await getBasePriceInWei(tokenSale)
+      let cap = await getCap(tokenSale)
+      let capInWei = cap * basePriceInWei
+      let investment = 0.24 * capInWei
+      await buyTokens(tokenSale, fund, investment)
+
+      let initialTokenBalance = await getTokenBalance(proofToken, sender)
+
+      await buyTokens(tokenSale, sender, 1 * ether)
+
+      let tokenBalance = await getTokenBalance(proofToken, sender)
+      let balanceIncrease = (tokenBalance - initialTokenBalance)
+      balanceIncrease = await baseUnits(proofToken, balanceIncrease)
+      let expectedBalanceIncrease = 11.961722488038
+      expect(balanceIncrease).almost.equal(expectedBalanceIncrease)
+    })
+
+    it('should throw if the number of tokens exceeds the cap', async function() {
+      let basePriceInWei = await getBasePriceInWei(tokenSale)
+      let cap = await getCap(tokenSale)
       let initialBalance = await getTokenBalance(proofToken, sender)
 
-      let amount = cap * priceInWei * (1.001)
+      let amount = cap * basePriceInWei * (1.001)
       let params = { value: amount, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
       await expectInvalidOpcode(tokenSale.buyTokens(sender, params))
 

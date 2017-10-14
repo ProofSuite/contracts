@@ -10,6 +10,7 @@ import { getAddress } from '../scripts/helpers.js'
 import { baseUnits, mintToken } from '../scripts/tokenHelpers.js'
 import { transferOwnership } from '../scripts/ownershipHelpers.js'
 import { transferControl } from '../scripts/controlHelpers.js'
+import { getPrice } from '../scripts/tokenSaleHelpers.js'
 
 const assert = chai.assert
 const should = chai.should()
@@ -82,9 +83,9 @@ contract('Crowdsale', (accounts) => {
       tokenSaleToken.should.be.equal(proofTokenAddress)
     })
 
-    it('Price should be equal to 0.088 ether', async function() {
-      let priceInWei = await tokenSale.priceInWei.call()
-      priceInWei.should.be.bignumber.equal(0.088 * 10 ** 18)
+    it('Initial Price should be equal to 0.0704 ether', async function() {
+      let price = await getPrice(tokenSale)
+      expect(price).almost.equal(0.8 * 0.088)
     })
   })
 

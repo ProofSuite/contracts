@@ -6,10 +6,10 @@ var chaiBigNumber = require('chai-bignumber')(BigNumber)
 chai.use(chaiAsPromised).use(chaiBigNumber).use(chaiStats).should()
 
 import { TOKENS_ALLOCATED_TO_PROOF, ether } from '../scripts/testConfig.js'
-import { getAddress, advanceToBlock, expectInvalidOpcode } from '../scripts/helpers.js'
+import { getAddress, advanceToBlock, expectInvalidOpcode, waitUntilTransactionsMined } from '../scripts/helpers.js'
 import { baseUnits, mintToken, getTokenBalance, getTotalSupply } from '../scripts/tokenHelpers.js'
 import { transferControl } from '../scripts/controlHelpers.js'
-import { buyTokens, finalize } from '../scripts/tokenSaleHelpers.js'
+import { buyTokens, finalize, getCap, getPrice, getPriceInWei, getBasePrice, getBasePriceInWei } from '../scripts/tokenSaleHelpers.js'
 import { pause, unpause } from '../scripts/pausableHelpers'
 
 const assert = chai.assert
@@ -106,9 +106,19 @@ contract('Crowdsale', (accounts) => {
       tokenSaleToken.should.be.equal(proofTokenAddress)
     })
 
-    it('Price should be equal to 0.088 ether', async function() {
-      let priceInWei = await tokenSale.priceInWei.call()
-      priceInWei.should.be.bignumber.equal(0.088 * 10 ** 18)
+    it('Initial Price should be equal to 0.0704 ether', async function() {
+      let price = await getPrice(tokenSale)
+      expect(price).almost.equal(0.8 * 0.088)
+    })
+
+    it('Base Price should be equal to 0.088 ether', async function() {
+      let price = await getBasePrice(tokenSale)
+      price.should.be.equal(0.088)
+    })
+
+    it('cap should be equal to remaining tokens adjusted to multiplier', async function() {
+      let cap = await getCap(tokenSale)
+      cap.should.be.equal(2249675)
     })
   })
 
@@ -202,6 +212,5 @@ contract('Crowdsale', (accounts) => {
       let finalized = await tokenSale.finalized.call()
       finalized.should.be.false
     })
-
   })
 })
