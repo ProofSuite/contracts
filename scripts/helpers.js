@@ -254,6 +254,35 @@ const advanceToBlock = async(number) => {
   }
 }
 
+const getTxnReceiptData = (txnReceipt) => {
+  let logs = txnReceipt.logs
+  let dataArray = []
+  logs.forEach(log => {
+    let data = log.data
+    if (data) {
+      dataArray.push(data)
+    } else {
+      dataArray.push('no data')
+    }
+  })
+
+  return dataArray
+}
+
+const getTxnReceiptTopics = (txnReceipt) => {
+  let logs = txnReceipt.logs
+
+  let topics = logs.map(log => {
+    let topics = log.topics
+    let result = {
+      'functionID': topics[0],
+      'parameters': topics.slice(1)
+    }
+    return result
+  })
+  return topics
+}
+
 module.exports = {
   waitUntilTransactionsMined,
   getBalance,
@@ -272,6 +301,8 @@ module.exports = {
   expectInvalidOpcode,
   expectInvalidJump,
   expectOutOfGas,
-  advanceToBlock
+  advanceToBlock,
+  getTxnReceiptData,
+  getTxnReceiptTopics
 }
 

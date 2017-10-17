@@ -84,7 +84,6 @@ contract('proofToken', (accounts) => {
     proofTokenAddress = await getAddress(proofToken)
 
     tokenSale = await TokenSale.new(
-      wallet,
       proofTokenAddress,
       startBlock,
       endBlock
@@ -123,7 +122,7 @@ contract('proofToken', (accounts) => {
     it('should correctly import a few balances', async function() {
       let addresses = [sender, receiver]
       let balances = [100, 100]
-      await importBalances(proofToken, proofPresaleToken, fund, addresses, balances, wallet)
+      await importBalances(proofToken, fund, addresses, balances)
 
       let senderBalance = await getTokenBalance(proofToken, sender)
       let receiverBalance = await getTokenBalance(proofToken, receiver)
@@ -154,7 +153,7 @@ contract('proofToken', (accounts) => {
       for (let i = 0; i < addressListNumber; i = i + 100) {
         let addressesBatch = addresses.slice(i, i + 100)
         let balancesBatch = balances.slice(i, i + 100)
-        await importBalances(proofToken, proofPresaleToken, fund, addressesBatch, balancesBatch, wallet)
+        await importBalances(proofToken, fund, addressesBatch, balancesBatch)
       }
 
       for (let i = 0; i < 10; i++) {
@@ -184,10 +183,10 @@ contract('proofToken', (accounts) => {
       for (let i = 0; i < addressListNumber; i = i + 100) {
         let addressesBatch = addresses.slice(i, i + 100)
         let balancesBatch = balances.slice(i, i + 100)
-        await importBalances(proofToken, proofPresaleToken, fund, addressesBatch, balancesBatch, wallet)
+        await importBalances(proofToken, fund, addressesBatch, balancesBatch)
       }
 
-      let expectedSupply = TOKENS_ALLOCATED_TO_PROOF + balances.sum()
+      let expectedSupply = balances.sum()
       let supply = await getTotalSupply(proofToken)
       supply.should.be.equal(expectedSupply)
     })
@@ -208,7 +207,7 @@ contract('proofToken', (accounts) => {
 
       await writeData
       balances = balances.toNumber()
-      await expectInvalidOpcode(importBalances(proofToken, proofPresaleToken, hacker, addresses, balances, wallet))
+      await expectInvalidOpcode(importBalances(proofToken, hacker, addresses, balances))
     })
 
     it('can lock the presale balances', async function() {
@@ -221,7 +220,7 @@ contract('proofToken', (accounts) => {
       await lockBalances(proofToken, fund).should.be.fulfilled
       let addresses = [hacker]
       let balances = [100]
-      await expectInvalidOpcode(importBalances(proofToken, proofPresaleToken, fund, addresses, balances, wallet))
+      await expectInvalidOpcode(importBalances(proofToken, fund, addresses, balances))
 
       let balance = await getTokenBalance(proofToken, hacker)
       balance.should.be.equal(0)

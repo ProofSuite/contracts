@@ -194,9 +194,8 @@ const claimTokens = async(token, sender) => {
  * @param balances
  * @returns transaction receipt
  */
-const importBalances = async(token, presaleToken, caller, addresses, balances, wallet) => {
-  let presaleTokenAddress = await getAddress(presaleToken)
-  let txn = await token.importPresaleBalances(addresses, balances, presaleTokenAddress, wallet, { from: caller, gas: MAX_GAS })
+const importBalances = async(token, caller, addresses, balances) => {
+  let txn = await token.importPresaleBalances(addresses, balances, { from: caller, gas: MAX_GAS })
   let txnReceipt = await h.waitUntilTransactionsMined(txn.tx)
   return txnReceipt
 }
@@ -207,13 +206,11 @@ const lockBalances = async(token, caller) => {
   return txnReceipt
 }
 
-const cloneToken = async(token, caller, config) => {
-  let txn = await token.createCloneToken(
-    config.name,
-    config.decimals,
-    config.symbol,
+const cloneToken = async(contract, caller, config) => {
+  let txn = await contract.createCloneToken(
     config.block,
-    config.transfersEnabled,
+    config.name,
+    config.symbol,
     { from: caller })
 
   let txnReceipt = await h.waitUntilTransactionsMined(txn.tx)

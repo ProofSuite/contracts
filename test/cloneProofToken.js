@@ -3,6 +3,7 @@ require('../scripts/jsHelpers.js')
 const fs = require('fs')
 const csv = require('csv-parser')
 const json2csv = require('json2csv')
+const ethereumAddress = require('ethereum-address')
 
 const BigNumber = web3.BigNumber
 let chai = require('chai')
@@ -12,74 +13,63 @@ var chaiBigNumber = require('chai-bignumber')(BigNumber)
 chai.use(chaiAsPromised).use(chaiBigNumber).use(chaiStats).should()
 
 import {
-  DEFAULT_GAS,
-  DEFAULT_GAS_PRICE,
-  TOKENS_ALLOCATED_TO_PROOF
+  ether
 } from '../scripts/testConfig.js'
 
 import {
   getAddress,
-  expectInvalidOpcode
+  getTxnReceiptTopics,
+  advanceToBlock
 } from '../scripts/helpers.js'
 
 import {
-  transferOwnership
-} from '../scripts/ownershipHelpers.js'
+  cloneToken,
+  getTokenBalance,
+  getTotalSupply,
+  transferToken,
+  baseUnits
+} from '../scripts/tokenHelpers.js'
+
+import {
+  buyTokens
+} from '../scripts/tokenSaleHelpers.js'
 
 import {
   transferControl
 } from '../scripts/controlHelpers.js'
 
 import {
-  getTokenBalance,
-  getTokenBalanceAt,
-  getTotalSupply,
-  getTotalSupplyAt,
-  mintToken,
-  getOwner,
-  getController,
-  transferToken,
-  importBalances,
-  lockBalances,
-  claimTokens,
-  cloneToken
-} from '../scripts/tokenHelpers.js'
+  decodeEthereumAddress
+} from '../scripts/utils.js'
 
 const assert = chai.assert
 const should = chai.should()
 const expect = chai.expect
 
-const ProofPresaleToken = artifacts.require('./ProofPresaleToken.sol')
 const ProofToken = artifacts.require('./ProofToken.sol')
 const TokenSale = artifacts.require('./TokenSale.sol')
 const TokenFactory = artifacts.require('./TokenFactory.sol')
 
-contract('cloneProofToken', (accounts) => {
+contract('cloneProofToken', ([fund, buyer, buyer2, wallet]) => {
   let tokenSale
-  let tokenSaleAddress
   let proofToken
   let proofTokenFactory
-  let proofPresaleToken
-  let proofPresaleTokenAddress
-  let proofTokenAddress
   let proofTokenFactoryAddress
 
-  let fund = accounts[0]
-  let sender = accounts[1]
-  let receiver = accounts[2]
-  let hacker = accounts[3]
-  let wallet = accounts[4]
-  let proofWalletAddress = accounts[9]
-
+  let proofTokenAddress
+  let tokenSaleAddress
   let startBlock
   let endBlock
 
-  beforeEach(async function() {
-    startBlock = web3.eth.blockNumber + 10
-    endBlock = web3.eth.blockNumber + 20
+  let txnReceipt
+  let topics
+  let clonedTokenAddress
+  let clonedToken
 
-    proofPresaleToken = await ProofPresaleToken.new()
-    proofPresaleTokenAddress = await getAddress(proofPresaleToken)
+  beforeEach(async function() {
+
+    startBlock = web3.eth.blockNumber + 10
+    endBlock = web3.eth.blockNumber + 1000
 
     proofTokenFactory = await TokenFactory.new()
     proofTokenFactoryAddress = await getAddress(proofTokenFactory)
@@ -89,40 +79,89 @@ contract('cloneProofToken', (accounts) => {
       '0x0',
       0,
       'Proof Token',
-      18,
-      'PRFT',
-      true
+      'PRFT'
     )
 
     proofTokenAddress = await getAddress(proofToken)
 
+    tokenSale = await TokenSale.new(
+      proofTokenAddress,
+      startBlock,
+      endBlock
+    )
+
+    tokenSaleAddress = await getAddress(tokenSale)
+
+    await transferControl(proofToken, fund, tokenSaleAddress)
+    await advanceToBlock(startBlock)
   })
 
-  describe('Clone token', function () {
-    it('should be able to clone token', async function () {
-      let controller = await getController(proofToken)
+  describe('Cloning: ', function () {
+    beforeEach(async function() {
+
       let config = {
-        name:'Proof Token',
-        decimals: 18,
+        name: 'Proof Token',
         symbol: 'PRFT2',
-        block: 0,
-        transfersEnabled: true
+        block: 0
       }
 
-      await cloneToken(proofToken, fund, config)
-      controller.should.be.equal(fund)
+      await buyTokens(tokenSale, buyer, 1 * ether)
+
+      txnReceipt = await cloneToken(proofToken, fund, config)
+      topics = getTxnReceiptTopics(txnReceipt)
+      clonedTokenAddress = decodeEthereumAddress(topics[0].parameters[0])
+      clonedToken = await ProofToken.at(clonedTokenAddress)
     })
 
-    it('should not be cloneable by non-controller contract', async function() {
-      let config = {
-        name: 'Proof Token v.2',
-        decimals: 18,
-        symbol: 'PRFT2',
-        block: 0,
-        transfersEnabled: true
-      }
+    it('token should be cloneable', async function () {
+      let validAddress = ethereumAddress.isAddress(clonedTokenAddress)
+      validAddress.should.be.true
+    })
 
-      await expectInvalidOpcode(cloneToken(proofToken, hacker, config))
+    it('cloned token should return identical balances', async function() {
+      let balance = await getTokenBalance(proofToken, buyer)
+      let clonedBalance = await getTokenBalance(clonedToken, buyer)
+      clonedBalance.should.be.equal(balance)
+    })
+
+    it('should return identical total supply', async function() {
+      let totalSupply = await getTotalSupply(proofToken)
+      let clonedTotalSupply = await getTotalSupply(clonedToken)
+      clonedTotalSupply.should.be.equal(totalSupply)
+    })
+
+    it('should be pluggable and buyable via a new tokensale instance', async function() {
+
+      let clonedTokenSale = await TokenSale.new(
+        clonedTokenAddress,
+        startBlock,
+        endBlock
+      )
+
+      let clonedTokenSaleAddress = await getAddress(clonedTokenSale)
+      await transferControl(clonedToken, fund, clonedTokenSaleAddress)
+
+      let initialTokenBalance = await getTokenBalance(clonedToken, buyer2)
+      await buyTokens(clonedTokenSale, buyer2, 1 * ether)
+
+      let tokenBalance = await getTokenBalance(clonedToken, buyer2)
+      let balanceIncrease = (tokenBalance - initialTokenBalance)
+      balanceIncrease = await baseUnits(clonedToken, balanceIncrease)
+      expect(balanceIncrease).almost.equal(14.204545454545)
+    })
+
+    it('cloned tokens should be transferable', async function() {
+
+      let buyer1InitialBalance = await getTokenBalance(clonedToken, buyer)
+      let buyer2InitialBalance = await getTokenBalance(clonedToken, buyer2)
+
+      await transferToken(clonedToken, buyer, buyer2, 100)
+
+      let buyer1Balance = await getTokenBalance(clonedToken, buyer)
+      let buyer2Balance = await getTokenBalance(clonedToken, buyer2)
+
+      buyer1Balance.should.be.equal(buyer1InitialBalance - 100)
+      buyer2Balance.should.be.equal(buyer2InitialBalance + 100)
     })
   })
 })

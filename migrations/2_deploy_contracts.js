@@ -29,9 +29,6 @@ module.exports = function(deployer) {
       throw new Error("Wallet not set")
     }
 
-    console.log(gas)
-    console.log(gasPrice)
-
     deployer.deploy(
         TokenFactory,
         {gas: gas, gasPrice: gasPrice }
@@ -50,7 +47,6 @@ module.exports = function(deployer) {
     .then(function() {
       return deployer.deploy(
         TokenSale,
-        wallet,
         ProofToken.address,
         1000000,
         2000000,

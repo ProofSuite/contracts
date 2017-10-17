@@ -1,6 +1,7 @@
-pragma solidity ^0.4.14;
+pragma solidity ^0.4.15;
 
 import './ProofToken.sol';
+import './Ownable.sol';
 
 contract TokenFactory {
 
@@ -9,9 +10,9 @@ contract TokenFactory {
         uint _snapshotBlock,
         string _tokenName,
         string _tokenSymbol
-        ) returns (ProofToken newToken)
-    {
-        newToken = new ProofToken(
+        ) returns (ProofToken) {
+
+        ProofToken newToken = new ProofToken(
             this,
             _parentToken,
             _snapshotBlock,

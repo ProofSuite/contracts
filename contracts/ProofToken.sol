@@ -1,8 +1,8 @@
-pragma solidity ^0.4.14;
+pragma solidity ^0.4.15;
 
 import './SafeMath.sol';
 import './Controllable.sol';
-import './CallFallback.sol';
+import './ApproveAndCallReceiver.sol';
 import './ControllerInterface.sol';
 import './ProofPresaleTokenInterface.sol';
 import './TokenFactoryInterface.sol';
@@ -24,6 +24,7 @@ contract ProofToken is Controllable {
 
   string public name;
   string public symbol;
+  string public version;
   uint8 public decimals;
 
   struct Checkpoint {
@@ -44,13 +45,16 @@ contract ProofToken is Controllable {
   bool public presaleBalancesLocked = false;
 
   uint256 public constant TOKENS_ALLOCATED_TO_PROOF = 1181031 * (10 ** 18);
+  uint256 public constant TOTAL_PRESALE_TOKENS = 112386712924725508802400;
 
   event Mint(address indexed to, uint256 amount);
   event MintFinished();
   event ClaimedTokens(address indexed _token, address indexed _owner, uint _amount);
-  event NewCloneToken(address indexed _cloneToken, uint _snapshotBlock);
+  event NewCloneToken(address indexed cloneToken);
   event Approval(address indexed _owner, address indexed _spender, uint256 _amount);
   event Transfer(address indexed from, address indexed to, uint256 value);
+
+
 
 
   function ProofToken(
@@ -68,17 +72,26 @@ contract ProofToken is Controllable {
       decimals = 18;
       transfersEnabled = true;
       creationBlock = block.number;
-
   }
 
   function() payable {
     revert();
   }
 
+
+  /**
+  * Returns the total Proof token supply at the current block
+  * @return total supply {uint}
+  */
   function totalSupply() constant returns (uint) {
     return totalSupplyAt(block.number);
   }
 
+  /**
+  * Returns the total Proof token supply at the given block number
+  * @param _blockNumber {uint}
+  * @return total supply {uint}
+  */
   function totalSupplyAt(uint _blockNumber) constant returns(uint) {
     // These next few lines are used when the totalSupply of the token is
     //  requested before a check point was ever created for this token, it
@@ -98,10 +111,21 @@ contract ProofToken is Controllable {
     }
   }
 
+  /**
+  * Returns the token holder balance at the current block
+  * @param _owner {address}
+  * @return balance {uint}
+   */
   function balanceOf(address _owner) constant returns (uint256 balance) {
     return balanceOfAt(_owner, block.number);
   }
 
+  /**
+  * Returns the token holder balance the the given block number
+  * @param _owner {address}
+  * @param _blockNumber {uint}
+  * @return balance {uint}
+  */
   function balanceOfAt(address _owner, uint _blockNumber) constant returns (uint) {
     // These next few lines are used when the balance of the token is
     //  requested before a check point was ever created for this token, it
@@ -122,17 +146,73 @@ contract ProofToken is Controllable {
     }
   }
 
+  /**
+  * Standard ERC20 transfer tokens
+  * @param _to {address}
+  * @param _amount {uint}
+  * @return success {bool}
+  */
   function transfer(address _to, uint256 _amount) returns (bool success) {
     require(transfersEnabled);
     return doTransfer(msg.sender, _to, _amount);
   }
 
+  /**
+  * Standard ERC20 transferFrom interface
+  * @param _from {address}
+  * @param _to {address}
+  * @param _amount {uint256}
+  * @return success {bool}
+  */
   function transferFrom(address _from, address _to, uint256 _amount) returns (bool success) {
     require(transfersEnabled);
     require(allowed[_from][msg.sender] >= _amount);
     allowed[_from][msg.sender] -= _amount;
     return doTransfer(_from, _to, _amount);
   }
+
+  /**
+  * Standard ERC20 approve interface
+  * @param _spender {address}
+  * @param _amount {uint256}
+  * @return success {bool}
+  */
+  function approve(address _spender, uint256 _amount) returns (bool success) {
+    require(transfersEnabled);
+
+    // To change the approve amount you first have to reduce the addresses`
+    //  allowance to zero by calling `approve(_spender,0)` if it is not
+    //  already 0 to mitigate the race condition described here:
+    //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
+    require((_amount == 0) || (allowed[msg.sender][_spender] == 0));
+
+    // Alerts the token controller of the approve function call
+    if (isContract(controller)) {
+        require(ControllerInterface(controller).onApprove(msg.sender, _spender, _amount));
+    }
+
+    allowed[msg.sender][_spender] = _amount;
+    Approval(msg.sender, _spender, _amount);
+    return true;
+  }
+
+  function approveAndCall(address _spender, uint256 _amount, bytes _extraData) returns (bool success) {
+    approve(_spender, _amount);
+
+    ApproveAndCallReceiver(_spender).receiveApproval(
+        msg.sender,
+        _amount,
+        this,
+        _extraData
+    );
+
+    return true;
+  }
+
+  function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
+    return allowed[_owner][_spender];
+  }
+
 
   function doTransfer(address _from, address _to, uint _amount) internal returns(bool) {
     require(_amount > 0);
@@ -164,40 +244,6 @@ contract ProofToken is Controllable {
     return true;
   }
 
-  function approve(address _spender, uint256 _amount) returns (bool success) {
-    require(transfersEnabled);
-
-    // To change the approve amount you first have to reduce the addresses`
-    //  allowance to zero by calling `approve(_spender,0)` if it is not
-    //  already 0 to mitigate the race condition described here:
-    //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-    require((_amount == 0) || (allowed[msg.sender][_spender] == 0));
-
-    // Alerts the token controller of the approve function call
-    if (isContract(controller)) {
-        require(ControllerInterface(controller).onApprove(msg.sender, _spender, _amount));
-    }
-
-    allowed[msg.sender][_spender] = _amount;
-    Approval(msg.sender, _spender, _amount);
-    return true;
-  }
-
-  function approveAndCall(address _spender, uint256 _amount, bytes _extraData) returns (bool success) {
-    require(approve(_spender, _amount));
-    CallFallback(_spender).receiveApproval(
-        msg.sender,
-        _amount,
-        this,
-        _extraData
-    );
-
-    return true;
-  }
-
-  function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
-    return allowed[_owner][_spender];
-  }
 
   function mint(address _owner, uint _amount) onlyController canMint returns (bool) {
     uint curTotalSupply = totalSupply();
@@ -236,24 +282,19 @@ contract ProofToken is Controllable {
    * Import presale balances before the start of the token sale. After importing
    * balances, lockPresaleBalances() has to be called to prevent further modification
    * of presale balances.
-   * @param _addresses Array of presale addresses
-   * @param _balances Array of balances corresponding to presale addresses.
-   * @param _presaleAddress To import the presale token total supply
-   * @return A boolean that indicates if the operation was successful.
+   * @param _addresses {address[]} Array of presale addresses
+   * @param _balances {uint256[]} Array of balances corresponding to presale addresses.
+   * @return success {bool}
    */
-  function importPresaleBalances(address[] _addresses, uint256[] _balances, address _presaleAddress, address _proofTokenWallet) onlyController returns (bool) {
+  function importPresaleBalances(address[] _addresses, uint256[] _balances) onlyController returns (bool) {
     require(presaleBalancesLocked == false);
-
 
     for (uint256 i = 0; i < _addresses.length; i++) {
       updateValueAtNow(balances[_addresses[i]], _balances[i]);
       Transfer(0, _addresses[i], _balances[i]);
     }
 
-    updateValueAtNow(balances[_proofTokenWallet], TOKENS_ALLOCATED_TO_PROOF);
-
-    presale = ProofPresaleTokenInterface(_presaleAddress);
-    updateValueAtNow(totalSupplyHistory, TOKENS_ALLOCATED_TO_PROOF + presale.totalSupply());
+    updateValueAtNow(totalSupplyHistory, TOTAL_PRESALE_TOKENS);
     return true;
   }
 
@@ -266,15 +307,23 @@ contract ProofToken is Controllable {
     return true;
   }
 
+  /**
+   * Lock the minting of Proof Tokens - to be called after the presale
+   * @return {bool} success
+  */
   function finishMinting() onlyController returns (bool) {
     mintingFinished = true;
     MintFinished();
     return true;
   }
 
+  /**
+   * Enable or block transfers - to be called in case of emergency
+  */
   function enableTransfers(bool _transfersEnabled) onlyController {
       transfersEnabled = _transfersEnabled;
   }
+
 
   function getValueAt(Checkpoint[] storage checkpoints, uint _block) constant internal returns (uint) {
 
@@ -328,14 +377,23 @@ contract ProofToken is Controllable {
       return a < b ? a : b;
   }
 
+  /**
+  * Clones Proof Token at the given snapshot block
+  * @param _snapshotBlock {uint}
+  * @param _cloneTokenName {string}
+  * @param _cloneTokenSymbol {string}
+   */
   function createCloneToken(
         uint _snapshotBlock,
         string _cloneTokenName,
         string _cloneTokenSymbol
-        ) onlyController returns(address)
-     {
+    ) returns(address) {
 
       if (_snapshotBlock == 0) {
+        _snapshotBlock = block.number;
+      }
+
+      if (_snapshotBlock > block.number) {
         _snapshotBlock = block.number;
       }
 
@@ -346,10 +404,11 @@ contract ProofToken is Controllable {
           _cloneTokenSymbol
         );
 
+
       cloneToken.transferControl(msg.sender);
 
       // An event to make the token easy to find on the blockchain
-      NewCloneToken(address(cloneToken), _snapshotBlock);
+      NewCloneToken(address(cloneToken));
       return address(cloneToken);
     }
 

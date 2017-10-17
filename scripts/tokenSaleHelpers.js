@@ -57,25 +57,49 @@ const getCap = async (tokenSale) => {
  * @returns token price in wei {String}
  */
 const getBasePriceInWei = async (tokenSale) => {
-  let priceInWei = await tokenSale.basePriceInWei.call()
+  let priceInWei = await tokenSale.BASE_PRICE_IN_WEI.call()
   return priceInWei.toNumber()
 }
 
+/**
+ * @description Returns the base token price (price of the token without current premium)
+ * @alias module:token-sale-helpers
+ * @param tokenSale {Object} - Truffle Contract Object
+ * @returns base token price in wei {Number}
+ */
 const getBasePrice = async (tokenSale) => {
   let price = await getBasePriceInWei(tokenSale)
   return (price / 10 ** 18)
 }
 
+/**
+ * @description Returns token price in wei
+ * @alias module:token-sale-helpers
+ * @param tokenSale {Object} - Truffle Contract Object
+ * @returns token price in wei {Number}
+ */
 const getPriceInWei = async (tokenSale) => {
   let priceInWei = await tokenSale.getPriceInWei.call()
   return priceInWei.toNumber()
 }
 
+/**
+ * @description Returns token price in ether
+ * @alias module:token-sale-helpers
+ * @param tokenSale  {Object} - Truffle Contract Object
+ * @returns token price in ether {Number}
+ */
 const getPrice = async (tokenSale) => {
   let price = await getPriceInWei(tokenSale)
   return (price / 10 ** 18)
 }
 
+/**
+ * @description Returns the number of remaining tokens
+ * @alias module:token-sale-helpers
+ * @param tokenSale {Object} - Truffle Contract Object
+ * @returns remaining tokens
+ */
 const getRemainingTokens = async (tokenSale) => {
   let remainingTokens = await tokenSale.remainingTokens.call()
   return remainingTokens.toNumber()

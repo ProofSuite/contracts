@@ -55,7 +55,6 @@ contract('Crowdsale', (accounts) => {
       true)
 
     tokenSale = await TokenSale.new(
-      wallet,
       proofTokenAddress,
       startBlock,
       endBlock)

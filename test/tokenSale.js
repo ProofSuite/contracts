@@ -56,7 +56,6 @@ contract('Crowdsale', (accounts) => {
     proofTokenAddress = await getAddress(proofToken)
 
     tokenSale = await TokenSale.new(
-      wallet,
       proofTokenAddress,
       startBlock,
       endBlock)
@@ -142,7 +141,6 @@ contract('Crowdsale', (accounts) => {
       proofTokenAddress = await getAddress(proofToken)
 
       tokenSale = await TokenSale.new(
-        wallet,
         proofTokenAddress,
         startBlock,
         endBlock)
@@ -171,7 +169,6 @@ contract('Crowdsale', (accounts) => {
       proofTokenAddress = await getAddress(proofToken)
 
       tokenSale = await TokenSale.new(
-        wallet,
         proofTokenAddress,
         startBlock,
         endBlock)
