@@ -15,6 +15,8 @@ contract TokenSale is Pausable {
 
   ProofTokenInterface public proofToken;
   uint256 public weiRaised;
+  uint256 public tokensMinted;
+  uint256 public totalSupply;
   uint256 public contributors;
   uint256 public decimalsMultiplier;
   uint256 public startBlock;
@@ -85,12 +87,15 @@ contract TokenSale is Pausable {
 
     uint256 weiAmount = msg.value;
     uint256 priceInWei = getPriceInWei();
-    uint256 tokens = weiAmount.mul(decimalsMultiplier).div(priceInWei);
-
     weiRaised = weiRaised.add(weiAmount);
-    contributors = contributors.add(1);
-    proofToken.mint(beneficiary, tokens);
 
+    uint256 tokens = weiAmount.mul(decimalsMultiplier).div(priceInWei);
+    tokensMinted = tokensMinted.add(tokens);
+    require(tokensMinted < tokenCap);
+
+    contributors = contributors.add(1);
+
+    proofToken.mint(beneficiary, tokens);
     TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
     forwardFunds();
   }
@@ -132,11 +137,11 @@ contract TokenSale is Pausable {
   function validPurchase() internal returns (bool) {
     uint256 current = block.number;
     bool withinPeriod = current >= startBlock && current <= endBlock;
-    uint256 weiAmount = weiRaised.add(msg.value);
     bool nonZeroPurchase = msg.value != 0;
-    bool withinCap = cap.mul(BASE_PRICE_IN_WEI) >= weiAmount;
+    // uint256 weiAmount = weiRaised.add(msg.value);
+    // bool withinCap = cap.mul(BASE_PRICE_IN_WEI) >= weiAmount;
 
-    return withinCap && nonZeroPurchase && withinPeriod;
+    return nonZeroPurchase && withinPeriod;
   }
 
   /**
