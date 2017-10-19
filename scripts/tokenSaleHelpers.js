@@ -17,6 +17,16 @@ const getWallet = async (tokenSale) => {
   return wallet
 }
 
+const getMultisig = async (tokenSale) => {
+  let multisig = await tokenSale.PROOF_MULTISIG.call()
+  return multisig
+}
+
+const getContributors = async (tokenSale) => {
+  let contributors = await tokenSale.contributors.call()
+  return contributors.toNumber()
+}
+
 /**
  * @description Returns token address for input token sale contract
  * @alias module:token-sale-helpers
@@ -181,5 +191,7 @@ module.exports = {
   getPrice,
   getPriceInWei,
   getCap,
+  getMultisig,
+  getContributors,
   finalize
 }

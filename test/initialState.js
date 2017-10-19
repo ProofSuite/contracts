@@ -20,6 +20,8 @@ const ProofPresaleToken = artifacts.require('./ProofPresaleToken.sol')
 const ProofToken = artifacts.require('./ProofToken.sol')
 const TokenSale = artifacts.require('./TokenSale.sol')
 
+debugger;
+
 contract('Crowdsale', (accounts) => {
   let fund = accounts[0]
   let tokenSale
@@ -29,11 +31,13 @@ contract('Crowdsale', (accounts) => {
   let proofPresaleTokenAddress
   let proofTokenAddress
   let sender = accounts[1]
-  let wallet = accounts[5]
   let proofWalletAddress = accounts[9]
 
   let startBlock
   let endBlock
+
+  let PROOF_MULTISIG = 0x0
+  let PROOF_TOKEN_WALLET = 0x0
 
   beforeEach(async function() {
     startBlock = web3.eth.blockNumber + 10
@@ -73,18 +77,23 @@ contract('Crowdsale', (accounts) => {
     })
 
     it('should initially set the wallet', async function() {
-      let tokenSaleWallet = await tokenSale.wallet.call()
-      tokenSaleWallet.should.be.equal(wallet)
+      let wallet = await tokenSale.PROOF_TOKEN_WALLET.call()
+      wallet.should.be.equal(wallet)
+    })
+
+    it('should initially set the multisig', async function() {
+      let multisig = await tokenSale.PROOF_MULTISIG.call()
+      multisig.should.be.equal(PROOF_MULTISIG)
     })
 
     it('should initially be linked to the Proof token', async function() {
-      let tokenSaleToken = await tokenSale.proofToken.call()
-      tokenSaleToken.should.be.equal(proofTokenAddress)
+      let token = await tokenSale.proofToken.call()
+      token.should.be.equal(proofTokenAddress)
     })
 
-    it('Initial Price should be equal to 0.0704 ether', async function() {
+    it('Token base price should be equal to 0.0748 ether', async function() {
       let price = await getPrice(tokenSale)
-      expect(price).almost.equal(0.8 * 0.088)
+      expect(price).almost.equal(0.85 * 0.088)
     })
   })
 

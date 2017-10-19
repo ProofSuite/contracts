@@ -4,7 +4,6 @@ import './SafeMath.sol';
 import './Controllable.sol';
 import './ApproveAndCallReceiver.sol';
 import './ControllerInterface.sol';
-import './ProofPresaleTokenInterface.sol';
 import './TokenFactoryInterface.sol';
 import './ProofTokenInterface.sol';
 
@@ -20,7 +19,6 @@ contract ProofToken is Controllable {
   using SafeMath for uint256;
   ProofTokenInterface public parentToken;
   TokenFactoryInterface public tokenFactory;
-  ProofPresaleTokenInterface public presale;
 
   string public name;
   string public symbol;
@@ -72,6 +70,7 @@ contract ProofToken is Controllable {
       decimals = 18;
       transfersEnabled = true;
       creationBlock = block.number;
+      version = '0.1';
   }
 
   function() payable {
@@ -247,30 +246,16 @@ contract ProofToken is Controllable {
 
   function mint(address _owner, uint _amount) onlyController canMint returns (bool) {
     uint curTotalSupply = totalSupply();
-    require(curTotalSupply + _amount >= curTotalSupply); // Check for overflow
     uint previousBalanceTo = balanceOf(_owner);
+
+    require(curTotalSupply + _amount >= curTotalSupply); // Check for overflow
     require(previousBalanceTo + _amount >= previousBalanceTo); // Check for overflow
+
     updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
     updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
     Transfer(0, _owner, _amount);
     return true;
   }
-
-  /// @notice Burns `_amount` tokens from `_owner`
-  /// @param _owner The address that will lose the tokens
-  /// @param _amount The quantity of tokens to burn
-  /// @return True if the tokens are burned correctly
-  function burn(address _owner, uint _amount) onlyController returns (bool) {
-      uint curTotalSupply = totalSupply();
-      require(curTotalSupply >= _amount);
-      uint previousBalanceFrom = balanceOf(_owner);
-      require(previousBalanceFrom >= _amount);
-      updateValueAtNow(totalSupplyHistory, curTotalSupply - _amount);
-      updateValueAtNow(balances[_owner], previousBalanceFrom - _amount);
-      Transfer(_owner, 0, _amount);
-      return true;
-  }
-
 
   modifier canMint() {
     require(!mintingFinished);

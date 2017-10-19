@@ -17,10 +17,12 @@ module.exports = {
     ethereum: {
       provider: new LightWalletProvider({
         keystore: '/Users/davidvanisacker/.sigmate/sigmate-v3-tokensale-mainnet.json',
-        password: '*********',
+        password: '********',
         rpcUrl: config.infura.ethereum
       }),
-      network_id: '1'
+      network_id: '1',
+      gas: config.constants.MAX_GAS,
+      gasPrice: config.constants.DEFAULT_GAS_PRICE
     },
     ropsten: {
       provider: new LightWalletProvider({

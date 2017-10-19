@@ -48,8 +48,8 @@ module.exports = function(deployer) {
       return deployer.deploy(
         TokenSale,
         ProofToken.address,
-        1000000,
-        2000000,
+        4376887,
+        5376887,
         {gas: gas, gasPrice: gasPrice }
       )
     })

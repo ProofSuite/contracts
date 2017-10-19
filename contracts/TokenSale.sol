@@ -14,9 +14,8 @@ contract TokenSale is Pausable {
   using SafeMath for uint256;
 
   ProofTokenInterface public proofToken;
-  address public wallet;
   uint256 public weiRaised;
-  uint256 public rate;
+  uint256 public contributors;
   uint256 public decimalsMultiplier;
   uint256 public startBlock;
   uint256 public endBlock;
@@ -31,21 +30,20 @@ contract TokenSale is Pausable {
   uint256 public constant TOTAL_PRESALE_TOKENS = 112386712924725508802400;
   uint256 public constant TOKENS_ALLOCATED_TO_PROOF = 1181031 * (10 ** 18);
 
-  address public constant PROOF_MULTISIG = 0x9fBDaAc5FaF6711F38Ab26541B7c0D72cB2C0e11;
-  address public constant PROOF_TOKEN_WALLET = 0x9fBDaAc5FaF6711F38Ab26541B7c0D72cB2C0e11;
-
+  address public constant PROOF_MULTISIG = 0x11e3de1bdA2650fa6BC74e7Cea6A39559E59b103;
+  address public constant PROOF_TOKEN_WALLET = 0x11e3de1bdA2650fa6BC74e7Cea6A39559E59b103;
 
   uint256 public tokenCap = PUBLIC_TOKENS - TOTAL_PRESALE_TOKENS;
   uint256 public cap = tokenCap / (10 ** 18);
   uint256 public weiCap = cap * BASE_PRICE_IN_WEI;
 
-  uint256 public firstCheckpointPrice = (BASE_PRICE_IN_WEI * 80) / 100;
+  uint256 public firstCheckpointPrice = (BASE_PRICE_IN_WEI * 85) / 100;
   uint256 public secondCheckpointPrice = (BASE_PRICE_IN_WEI * 90) / 100;
   uint256 public thirdCheckpointPrice = (BASE_PRICE_IN_WEI * 95) / 100;
 
   uint256 public firstCheckpoint = (weiCap * 5) / 100;
   uint256 public secondCheckpoint = (weiCap * 10) / 100;
-  uint256 public thirdCheckpoint = (weiCap * 15) / 100;
+  uint256 public thirdCheckpoint = (weiCap * 20) / 100;
 
   event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint256 value, uint256 amount);
   event NewClonedToken(address indexed _cloneToken);
@@ -90,6 +88,7 @@ contract TokenSale is Pausable {
     uint256 tokens = weiAmount.mul(decimalsMultiplier).div(priceInWei);
 
     weiRaised = weiRaised.add(weiAmount);
+    contributors = contributors.add(1);
     proofToken.mint(beneficiary, tokens);
 
     TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);

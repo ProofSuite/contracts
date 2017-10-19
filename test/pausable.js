@@ -176,7 +176,7 @@ contract('Crowdsale', (accounts) => {
 
       let balance = await getTokenBalance(proofToken, sender)
       let balanceIncrease = await baseUnits(proofToken, balance - initialBalance)
-      expect(balanceIncrease).to.almost.equal(28.4090909090)
+      expect(balanceIncrease).to.almost.equal(26.737967914)
     })
   })
 })

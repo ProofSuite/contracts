@@ -147,7 +147,7 @@ contract('cloneProofToken', ([fund, buyer, buyer2, wallet]) => {
       let tokenBalance = await getTokenBalance(clonedToken, buyer2)
       let balanceIncrease = (tokenBalance - initialTokenBalance)
       balanceIncrease = await baseUnits(clonedToken, balanceIncrease)
-      expect(balanceIncrease).almost.equal(14.204545454545)
+      expect(balanceIncrease).almost.equal(13.3689839572)
     })
 
     it('cloned tokens should be transferable', async function() {

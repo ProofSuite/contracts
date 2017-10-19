@@ -24,7 +24,9 @@ import { buyTokens,
          getWallet,
          getBasePriceInWei,
          getPriceInWei,
-         getCap } from '../scripts/tokenSaleHelpers.js'
+         getMultisig,
+         getCap,
+         getContributors } from '../scripts/tokenSaleHelpers.js'
 
 import { transferControl } from '../scripts/controlHelpers.js'
 
@@ -137,7 +139,7 @@ contract('Crowdsale', (accounts) => {
       expect(supplyIncrease).to.almost.equal(expectedSupplyIncrease)
     })
 
-    it('should increase total supply by 14.204 for 10 ether raised', async function() {
+    it('should increase total supply by 13.368 for 10 ether raised', async function() {
       let initialTotalSupply = await getTotalSupply(proofToken)
 
       await buyTokens(tokenSale, sender, 1 * ether)
@@ -146,16 +148,16 @@ contract('Crowdsale', (accounts) => {
       let supplyIncrease = (totalSupply - initialTotalSupply)
       supplyIncrease = await baseUnits(proofToken, supplyIncrease)
 
-      expect(supplyIncrease).almost.equal(14.20454545)
+      expect(supplyIncrease).almost.equal(13.36898395)
     })
 
     it('should transfer money to the wallet after receiving investment', async function() {
-      let wallet = await getWallet(tokenSale)
-      let initialWalletBalance = getBalance(wallet)
+      let multisig = await getMultisig(tokenSale)
+      let initialBalance = await getBalance(multisig)
       await buyTokens(tokenSale, sender, 1 * ether)
 
-      let walletBalance = getBalance(wallet)
-      let balanceIncrease = (walletBalance - initialWalletBalance) / (1 * ether)
+      let balance = await getBalance(multisig)
+      let balanceIncrease = (balance - initialBalance) / (1 * ether)
       expect(balanceIncrease).almost.equal(1, 3)
     })
 
@@ -173,7 +175,7 @@ contract('Crowdsale', (accounts) => {
       expect(balanceIncrease).to.almost.equal(expectedBalanceIncrease)
     })
 
-    it('should increase buyer balance by 14.20454545 for 10 ether invested', async function() {
+    it('should increase buyer balance by 13.36898395 for 10 ether invested', async function() {
       let initialTokenBalance = await getTokenBalance(proofToken, sender)
 
       await buyTokens(tokenSale, sender, 1 * ether)
@@ -181,7 +183,7 @@ contract('Crowdsale', (accounts) => {
       let tokenBalance = await getTokenBalance(proofToken, sender)
       let balanceIncrease = (tokenBalance - initialTokenBalance)
       balanceIncrease = await baseUnits(proofToken, balanceIncrease)
-      expect(balanceIncrease).almost.equal(14.20454545)
+      expect(balanceIncrease).almost.equal(13.36898395)
     })
   })
 
@@ -192,9 +194,9 @@ contract('Crowdsale', (accounts) => {
       await advanceToBlock(startBlock)
     })
 
-    it('should initially return 20% premium price', async function() {
+    it('should initially return 15% premium price', async function() {
       let price = await getPriceInWei(tokenSale)
-      let expectedPrice = 70400000000000000
+      let expectedPrice = 74800000000000000
       price.should.be.equal(expectedPrice)
     })
 
@@ -206,7 +208,7 @@ contract('Crowdsale', (accounts) => {
       await buyTokens(tokenSale, sender, investment)
 
       let priceInWei = await getPriceInWei(tokenSale)
-      let expectedPrice = 79200000000000000
+      let expectedPrice = 74800000000000000
       priceInWei.should.be.equal(expectedPrice)
     })
 
@@ -251,7 +253,7 @@ contract('Crowdsale', (accounts) => {
       let tokenBalance = await getTokenBalance(proofToken, sender)
       let balanceIncrease = (tokenBalance - initialTokenBalance)
       balanceIncrease = await baseUnits(proofToken, balanceIncrease)
-      let expectedBalanceIncrease = 14.204545454545
+      let expectedBalanceIncrease = 13.368983957219
       expect(balanceIncrease).almost.equal(expectedBalanceIncrease)
     })
 
@@ -269,7 +271,7 @@ contract('Crowdsale', (accounts) => {
       let tokenBalance = await getTokenBalance(proofToken, sender)
       let balanceIncrease = (tokenBalance - initialTokenBalance)
       balanceIncrease = await baseUnits(proofToken, balanceIncrease)
-      let expectedBalanceIncrease = 12.6262626262
+      let expectedBalanceIncrease = 11.9617224880
       expect(balanceIncrease).almost.equal(expectedBalanceIncrease)
     })
 
@@ -287,7 +289,7 @@ contract('Crowdsale', (accounts) => {
       let tokenBalance = await getTokenBalance(proofToken, sender)
       let balanceIncrease = (tokenBalance - initialTokenBalance)
       balanceIncrease = await baseUnits(proofToken, balanceIncrease)
-      let expectedBalanceIncrease = 11.961722488038
+      let expectedBalanceIncrease = 11.363636363636
       expect(balanceIncrease).almost.equal(expectedBalanceIncrease)
     })
 
@@ -296,12 +298,30 @@ contract('Crowdsale', (accounts) => {
       let cap = await getCap(tokenSale)
       let initialBalance = await getTokenBalance(proofToken, sender)
 
-      let amount = cap * basePriceInWei * (1.001)
+      let amount = 0.85 * cap * basePriceInWei * (1.001)
       let params = { value: amount, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
       await expectInvalidOpcode(tokenSale.buyTokens(sender, params))
 
       let balance = await getTokenBalance(proofToken, sender)
       balance.should.be.equal(initialBalance)
     })
+
+    it('should not throw if the number of tokens hits just below the cap', async function() {
+      let basePriceInWei = await getBasePriceInWei(tokenSale)
+      let cap = await getCap(tokenSale)
+      let initialBalance = await getTokenBalance(proofToken, sender)
+
+      let amount = 0.85 * cap * basePriceInWei * (0.999)
+      let params = { value: amount, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
+      tokenSale.buyTokens(sender, params).should.be.fulfilled
+    })
+
+    it('should increase the number of contributors by 1', async function() {
+      let initialContributors = await getContributors(tokenSale)
+      await buyTokens(tokenSale, sender, 1 * ether)
+      let contributors = await getContributors(tokenSale)
+      contributors.should.be.equal(initialContributors + 1)
+    })
+
   })
 })

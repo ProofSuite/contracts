@@ -95,9 +95,14 @@ contract('Crowdsale', (accounts) => {
       await advanceToBlock(startBlock)
     })
 
-    it('should initially set the wallet', async function() {
-      let tokenSaleWallet = await tokenSale.wallet.call()
-      tokenSaleWallet.should.be.equal(wallet)
+    it('should initially set the token wallet', async function() {
+      let tokenSaleWallet = await tokenSale.PROOF_TOKEN_WALLET.call()
+      tokenSaleWallet.should.be.equal('Correct wallet address')
+    })
+
+    it('should initially set the multisig', async function() {
+      let tokenSaleWallet = await tokenSale.PROOF_MULTISIG.call()
+      tokenSaleWallet.should.be.equal('Correct wallet address')
     })
 
     it('should initially be linked to the Proof token', async function() {
@@ -105,9 +110,9 @@ contract('Crowdsale', (accounts) => {
       tokenSaleToken.should.be.equal(proofTokenAddress)
     })
 
-    it('Initial Price should be equal to 0.0704 ether', async function() {
+    it('Initial Price should be equal to 0.0748 ether', async function() {
       let price = await getPrice(tokenSale)
-      expect(price).almost.equal(0.8 * 0.088)
+      expect(price).almost.equal(0.85 * 0.088)
     })
 
     it('Base Price should be equal to 0.088 ether', async function() {
@@ -117,7 +122,7 @@ contract('Crowdsale', (accounts) => {
 
     it('cap should be equal to remaining tokens adjusted to multiplier', async function() {
       let cap = await getCap(tokenSale)
-      cap.should.be.equal(2249675)
+      cap.should.be.equal(1068644)
     })
   })
 
