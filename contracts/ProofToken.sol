@@ -82,7 +82,7 @@ contract ProofToken is Controllable {
   * Returns the total Proof token supply at the current block
   * @return total supply {uint}
   */
-  function totalSupply() constant returns (uint) {
+  function totalSupply() public constant returns (uint) {
     return totalSupplyAt(block.number);
   }
 
@@ -91,7 +91,7 @@ contract ProofToken is Controllable {
   * @param _blockNumber {uint}
   * @return total supply {uint}
   */
-  function totalSupplyAt(uint _blockNumber) constant returns(uint) {
+  function totalSupplyAt(uint _blockNumber) public constant returns(uint) {
     // These next few lines are used when the totalSupply of the token is
     //  requested before a check point was ever created for this token, it
     //  requires that the `parentToken.totalSupplyAt` be queried at the
@@ -115,7 +115,7 @@ contract ProofToken is Controllable {
   * @param _owner {address}
   * @return balance {uint}
    */
-  function balanceOf(address _owner) constant returns (uint256 balance) {
+  function balanceOf(address _owner) public constant returns (uint256 balance) {
     return balanceOfAt(_owner, block.number);
   }
 
@@ -125,7 +125,7 @@ contract ProofToken is Controllable {
   * @param _blockNumber {uint}
   * @return balance {uint}
   */
-  function balanceOfAt(address _owner, uint _blockNumber) constant returns (uint) {
+  function balanceOfAt(address _owner, uint _blockNumber) public constant returns (uint) {
     // These next few lines are used when the balance of the token is
     //  requested before a check point was ever created for this token, it
     //  requires that the `parentToken.balanceOfAt` be queried at the
@@ -151,7 +151,7 @@ contract ProofToken is Controllable {
   * @param _amount {uint}
   * @return success {bool}
   */
-  function transfer(address _to, uint256 _amount) returns (bool success) {
+  function transfer(address _to, uint256 _amount) public returns (bool success) {
     return doTransfer(msg.sender, _to, _amount);
   }
 
@@ -162,7 +162,7 @@ contract ProofToken is Controllable {
   * @param _amount {uint256}
   * @return success {bool}
   */
-  function transferFrom(address _from, address _to, uint256 _amount) returns (bool success) {
+  function transferFrom(address _from, address _to, uint256 _amount) public returns (bool success) {
     require(allowed[_from][msg.sender] >= _amount);
     allowed[_from][msg.sender] -= _amount;
     return doTransfer(_from, _to, _amount);
@@ -174,7 +174,7 @@ contract ProofToken is Controllable {
   * @param _amount {uint256}
   * @return success {bool}
   */
-  function approve(address _spender, uint256 _amount) returns (bool success) {
+  function approve(address _spender, uint256 _amount) public returns (bool success) {
     require(transfersEnabled);
 
     // To change the approve amount you first have to reduce the addresses`
@@ -193,7 +193,7 @@ contract ProofToken is Controllable {
     return true;
   }
 
-  function approveAndCall(address _spender, uint256 _amount, bytes _extraData) returns (bool success) {
+  function approveAndCall(address _spender, uint256 _amount, bytes _extraData) public returns (bool success) {
     approve(_spender, _amount);
 
     ApproveAndCallReceiver(_spender).receiveApproval(
@@ -206,7 +206,7 @@ contract ProofToken is Controllable {
     return true;
   }
 
-  function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
+  function allowance(address _owner, address _spender) public constant returns (uint256 remaining) {
     return allowed[_owner][_spender];
   }
 
@@ -243,7 +243,7 @@ contract ProofToken is Controllable {
   }
 
 
-  function mint(address _owner, uint _amount) onlyController canMint returns (bool) {
+  function mint(address _owner, uint _amount) public onlyController canMint returns (bool) {
     uint curTotalSupply = totalSupply();
     uint previousBalanceTo = balanceOf(_owner);
 
@@ -270,7 +270,7 @@ contract ProofToken is Controllable {
    * @param _balances {uint256[]} Array of balances corresponding to presale addresses.
    * @return success {bool}
    */
-  function importPresaleBalances(address[] _addresses, uint256[] _balances) onlyController returns (bool) {
+  function importPresaleBalances(address[] _addresses, uint256[] _balances) public onlyController returns (bool) {
     require(presaleBalancesLocked == false);
 
     for (uint256 i = 0; i < _addresses.length; i++) {
@@ -286,7 +286,7 @@ contract ProofToken is Controllable {
    * Lock presale balances after successful presale balance import
    * @return A boolean that indicates if the operation was successful.
    */
-  function lockPresaleBalances() onlyController returns (bool) {
+  function lockPresaleBalances() public onlyController returns (bool) {
     presaleBalancesLocked = true;
     return true;
   }
@@ -295,7 +295,7 @@ contract ProofToken is Controllable {
    * Lock the minting of Proof Tokens - to be called after the presale
    * @return {bool} success
   */
-  function finishMinting() onlyController returns (bool) {
+  function finishMinting() public onlyController returns (bool) {
     mintingFinished = true;
     MintFinished();
     return true;
@@ -304,7 +304,7 @@ contract ProofToken is Controllable {
   /**
    * Enable or block transfers - to be called in case of emergency
   */
-  function enableTransfers(bool _transfersEnabled) onlyController {
+  function enableTransfers(bool _transfersEnabled) public onlyController {
       transfersEnabled = _transfersEnabled;
   }
 
@@ -371,7 +371,7 @@ contract ProofToken is Controllable {
         uint _snapshotBlock,
         string _cloneTokenName,
         string _cloneTokenSymbol
-    ) returns(address) {
+    ) public returns(address) {
 
       if (_snapshotBlock == 0) {
         _snapshotBlock = block.number;

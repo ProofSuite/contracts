@@ -10,7 +10,7 @@ contract TokenFactory {
         uint _snapshotBlock,
         string _tokenName,
         string _tokenSymbol
-        ) returns (ProofToken) {
+        ) public returns (ProofToken) {
 
         ProofToken newToken = new ProofToken(
             this,

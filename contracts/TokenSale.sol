@@ -80,7 +80,7 @@ contract TokenSale is Pausable {
    * Low level token purchase function
    * @param _beneficiary will receive the tokens.
    */
-  function buyTokens(address _beneficiary) payable whenNotPaused whenNotFinalized {
+  function buyTokens(address _beneficiary) public payable whenNotPaused whenNotFinalized {
     require(_beneficiary != 0x0);
     require(validPurchase());
 
@@ -210,7 +210,7 @@ contract TokenSale is Pausable {
   /**
   * Finalize the token sale (can only be called by owner)
   */
-  function finalize() onlyOwner {
+  function finalize() public onlyOwner {
     require(paused);
 
     proofToken.finishMinting();

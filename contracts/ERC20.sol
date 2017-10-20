@@ -8,11 +8,11 @@ contract ERC20 {
 
   uint256 public totalSupply;
 
-  function balanceOf(address who) constant returns (uint256);
-  function transfer(address to, uint256 value) returns (bool);
-  function transferFrom(address from, address to, uint256 value) returns (bool);
-  function approve(address spender, uint256 value) returns (bool);
-  function allowance(address owner, address spender) constant returns (uint256);
+  function balanceOf(address _owner) constant returns (uint256);
+  function transfer(address _to, uint256 _value) returns (bool);
+  function transferFrom(address _from, address _to, uint256 _amount) returns (bool);
+  function approve(address _spender, uint256 _amount) returns (bool);
+  function allowance(address _owner, address _spender) constant returns (uint256);
 
   event Transfer(address indexed from, address indexed to, uint256 value);
   event Approval(address indexed owner, address indexed spender, uint256 value);

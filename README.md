@@ -46,7 +46,7 @@ from the contract creator to the tokensale by calling the `changeControl` functi
 It is better not to use the wallet that created the contract and transfer ownership to a wallet shared by several members of the team
 
 
-Critical Verifications :
+Critical Verifications:
 
 1. Verify the multisig address
 The multisig refers to the wallet to which funds from the tokensale are transferred when a investor sends ether
@@ -60,7 +60,7 @@ The cap is the maximum number of tokens that can be issued
 5. Verify all the rest
 
 
-Token Sale Finalization :
+Token Sale Finalization:
 
 The token sale can be finalized in different ways.
 
