@@ -228,6 +228,16 @@ const getAllowance = async(token, owner, spender) => {
   return allowance.toNumber()
 }
 
+const enableTransfers = async(token, caller) => {
+  let txn = await token.enableTransfers(true, { from: caller })
+  let txnReceipt = await waitUntilTransactionsMined(txn.tx)
+}
+
+const lockTransfers = async(token, caller) => {
+  let txn = await token.enableTransfers(false, { from: caller })
+  let txnReceipt = await waitUntilTransactionsMined(txn.tx)
+}
+
 module.exports = {
   getOwner,
   getController,

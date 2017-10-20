@@ -14,7 +14,7 @@ contract TokenSale is Pausable {
   using SafeMath for uint256;
 
   ProofTokenInterface public proofToken;
-  uint256 public weiRaised;
+  uint256 public totalWeiRaised;
   uint256 public tokensMinted;
   uint256 public totalSupply;
   uint256 public contributors;
@@ -27,7 +27,6 @@ contract TokenSale is Pausable {
 
   uint256 public constant BASE_PRICE_IN_WEI = 88000000000000000;
 
-  uint256 public constant TOTAL_TOKENS = 2 * 1181031 * (10 ** 18);
   uint256 public constant PUBLIC_TOKENS = 1181031 * (10 ** 18);
   uint256 public constant TOTAL_PRESALE_TOKENS = 112386712924725508802400;
   uint256 public constant TOKENS_ALLOCATED_TO_PROOF = 1181031 * (10 ** 18);
@@ -79,15 +78,15 @@ contract TokenSale is Pausable {
 
   /**
    * Low level token purchase function
-   * @param beneficiary will receive the tokens.
+   * @param _beneficiary will receive the tokens.
    */
-  function buyTokens(address beneficiary) payable whenNotPaused whenNotFinalized {
-    require(beneficiary != 0x0);
+  function buyTokens(address _beneficiary) payable whenNotPaused whenNotFinalized {
+    require(_beneficiary != 0x0);
     require(validPurchase());
 
     uint256 weiAmount = msg.value;
     uint256 priceInWei = getPriceInWei();
-    weiRaised = weiRaised.add(weiAmount);
+    totalWeiRaised = totalWeiRaised.add(weiAmount);
 
     uint256 tokens = weiAmount.mul(decimalsMultiplier).div(priceInWei);
     tokensMinted = tokensMinted.add(tokens);
@@ -95,8 +94,8 @@ contract TokenSale is Pausable {
 
     contributors = contributors.add(1);
 
-    proofToken.mint(beneficiary, tokens);
-    TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
+    proofToken.mint(_beneficiary, tokens);
+    TokenPurchase(msg.sender, _beneficiary, weiAmount, tokens);
     forwardFunds();
   }
 
@@ -109,11 +108,11 @@ contract TokenSale is Pausable {
 
     uint256 price;
 
-    if (weiRaised < firstCheckpoint) {
+    if (totalWeiRaised < firstCheckpoint) {
       price = firstCheckpointPrice;
-    } else if (weiRaised < secondCheckpoint) {
+    } else if (totalWeiRaised < secondCheckpoint) {
       price = secondCheckpointPrice;
-    } else if (weiRaised < thirdCheckpoint) {
+    } else if (totalWeiRaised < thirdCheckpoint) {
       price = thirdCheckpointPrice;
     } else {
       price = BASE_PRICE_IN_WEI;
@@ -138,8 +137,6 @@ contract TokenSale is Pausable {
     uint256 current = block.number;
     bool withinPeriod = current >= startBlock && current <= endBlock;
     bool nonZeroPurchase = msg.value != 0;
-    // uint256 weiAmount = weiRaised.add(msg.value);
-    // bool withinCap = cap.mul(BASE_PRICE_IN_WEI) >= weiAmount;
 
     return nonZeroPurchase && withinPeriod;
   }
@@ -197,6 +194,11 @@ contract TokenSale is Pausable {
     proofToken.transferControl(_newController);
   }
 
+
+  function enableTransfers(bool _transfersEnabled) public onlyOwner {
+    proofToken.enableTransfers(_transfersEnabled);
+  }
+
   /**
   * Allocates Proof tokens to the given Proof Token wallet
   * @param _tokens {uint256}
@@ -212,6 +214,7 @@ contract TokenSale is Pausable {
     require(paused);
 
     proofToken.finishMinting();
+    proofToken.enableTransfers(true);
     Finalized();
 
     finalized = true;

@@ -214,5 +214,6 @@ contract('Crowdsale', (accounts) => {
       let finalized = await tokenSale.finalized.call()
       finalized.should.be.false
     })
+
   })
 })

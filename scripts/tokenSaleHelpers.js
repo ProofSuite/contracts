@@ -177,6 +177,18 @@ const finalize = async (tokenSale, caller) => {
   return txnReceipt
 }
 
+const enableTransfers = async (tokenSale, caller) => {
+  let txn = await tokenSale.enableTransfers(true, { from: caller })
+  let txnReceipt = await waitUntilTransactionsMined(txn.tx)
+  return txnReceipt
+}
+
+const lockTransfers = async (tokenSale, caller) => {
+  let txn = await tokenSale.enableTransfers(false, {from: caller })
+  let txnReceipt = await waitUntilTransactionsMined(txn.tx)
+  return txnReceipt
+}
+
 module.exports = {
   getWallet,
   getToken,
@@ -193,5 +205,7 @@ module.exports = {
   getCap,
   getMultisig,
   getContributors,
-  finalize
+  finalize,
+  enableTransfers,
+  lockTransfers
 }

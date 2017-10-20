@@ -68,7 +68,7 @@ contract ProofToken is Controllable {
       name = _tokenName;
       symbol = _tokenSymbol;
       decimals = 18;
-      transfersEnabled = true;
+      transfersEnabled = false;
       creationBlock = block.number;
       version = '0.1';
   }
@@ -152,7 +152,6 @@ contract ProofToken is Controllable {
   * @return success {bool}
   */
   function transfer(address _to, uint256 _amount) returns (bool success) {
-    require(transfersEnabled);
     return doTransfer(msg.sender, _to, _amount);
   }
 
@@ -164,7 +163,6 @@ contract ProofToken is Controllable {
   * @return success {bool}
   */
   function transferFrom(address _from, address _to, uint256 _amount) returns (bool success) {
-    require(transfersEnabled);
     require(allowed[_from][msg.sender] >= _amount);
     allowed[_from][msg.sender] -= _amount;
     return doTransfer(_from, _to, _amount);
@@ -214,6 +212,7 @@ contract ProofToken is Controllable {
 
 
   function doTransfer(address _from, address _to, uint _amount) internal returns(bool) {
+    require(transfersEnabled);
     require(_amount > 0);
     require(parentSnapShotBlock < block.number);
     require((_to != 0) && (_to != address(this)));

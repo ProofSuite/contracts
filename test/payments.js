@@ -26,7 +26,8 @@ import { buyTokens,
          getPriceInWei,
          getMultisig,
          getCap,
-         getContributors } from '../scripts/tokenSaleHelpers.js'
+         getContributors,
+         enableTransfers } from '../scripts/tokenSaleHelpers.js'
 
 import { transferControl } from '../scripts/controlHelpers.js'
 
@@ -75,6 +76,7 @@ contract('Crowdsale', (accounts) => {
   describe('Starting and Ending Period', async function() {
     beforeEach(async function() {
       await transferControl(proofToken, fund, tokenSaleAddress)
+      await enableTransfers(tokenSale, fund)
     })
 
     it('should reject payments before start', async function() {
@@ -98,6 +100,7 @@ contract('Crowdsale', (accounts) => {
   describe('Payments', async function() {
     beforeEach(async function() {
       await transferControl(proofToken, fund, tokenSaleAddress)
+      await enableTransfers(tokenSale, fund)
       await advanceToBlock(startBlock)
     })
 
@@ -191,6 +194,7 @@ contract('Crowdsale', (accounts) => {
 
     beforeEach(async function() {
       await transferControl(proofToken, fund, tokenSaleAddress)
+      await enableTransfers(tokenSale, fund)
       await advanceToBlock(startBlock)
     })
 

@@ -28,7 +28,8 @@ import {
 } from '../scripts/tokenHelpers.js'
 
 import {
-  buyTokens
+  buyTokens,
+  enableTransfers
 } from '../scripts/tokenSaleHelpers.js'
 
 import {
@@ -101,6 +102,7 @@ contract('Crowdsale', (accounts) => {
 
     beforeEach(async function() {
       await transferControl(proofToken, fund, tokenSaleAddress)
+      await enableTransfers(tokenSale, fund)
       await advanceToBlock(startBlock)
     })
 
