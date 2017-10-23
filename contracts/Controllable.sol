@@ -13,7 +13,7 @@ contract Controllable {
   /**
    * @dev The Ownable constructor sets the original `owner` of the contract to the sender account.
    */
-  function Controllable() {
+  function Controllable() public {
     controller = msg.sender;
   }
 
@@ -29,7 +29,7 @@ contract Controllable {
    * @dev Allows the current owner to transfer control of the contract to a newOwner.
    * @param newController The address to transfer ownership to.
    */
-  function transferControl(address newController) onlyController {
+  function transferControl(address newController) public onlyController {
     if (newController != address(0)) {
       controller = newController;
     }

@@ -5,6 +5,8 @@ var chaiStats = require('chai-stats')
 var chaiBigNumber = require('chai-bignumber')(BigNumber)
 chai.use(chaiAsPromised).use(chaiBigNumber).use(chaiStats).should()
 
+import moment from 'moment'
+
 import {
   ether,
   DEFAULT_GAS,
@@ -14,7 +16,8 @@ import {
 import {
   getAddress,
   expectInvalidOpcode,
-  advanceToBlock
+  latestTime,
+  increaseTime
 } from '../scripts/helpers.js'
 
 import {
@@ -61,12 +64,14 @@ contract('Crowdsale', (accounts) => {
   let wallet = accounts[5]
   let proofWalletAddress = accounts[9]
 
-  let startBlock
-  let endBlock
+  let startTime
+  let endTime
+  let contractUploadTime
 
   beforeEach(async function() {
-    startBlock = web3.eth.blockNumber + 10
-    endBlock = web3.eth.blockNumber + 20
+    contractUploadTime = latestTime()
+    startTime = contractUploadTime.add(1, 'day').unix()
+    endTime = contractUploadTime.add(31, 'day').unix()
 
     proofPresaleToken = await ProofPresaleToken.new()
     proofPresaleTokenAddress = await getAddress(proofPresaleToken)
@@ -84,8 +89,8 @@ contract('Crowdsale', (accounts) => {
 
     tokenSale = await TokenSale.new(
       proofTokenAddress,
-      startBlock,
-      endBlock
+      startTime,
+      endTime
     )
 
     tokenSaleAddress = await getAddress(tokenSale)
@@ -103,7 +108,7 @@ contract('Crowdsale', (accounts) => {
     beforeEach(async function() {
       await transferControl(proofToken, fund, tokenSaleAddress)
       await enableTransfers(tokenSale, fund)
-      await advanceToBlock(startBlock)
+      await increaseTime(moment.duration(1.01, 'day'))
     })
 
     it('can be paused and unpaused by the owner', async function() {

@@ -5,8 +5,9 @@ var chaiStats = require('chai-stats')
 var chaiBigNumber = require('chai-bignumber')(BigNumber)
 chai.use(chaiAsPromised).use(chaiBigNumber).use(chaiStats).should()
 
+import moment from 'moment'
 import { TOKENS_ALLOCATED_TO_PROOF, ether } from '../scripts/testConfig.js'
-import { getAddress, advanceToBlock, expectInvalidOpcode, waitUntilTransactionsMined } from '../scripts/helpers.js'
+import { getAddress, advanceToBlock, expectInvalidOpcode, waitUntilTransactionsMined, latestTime, increaseTime } from '../scripts/helpers.js'
 import { baseUnits, mintToken, getTokenBalance, getTotalSupply } from '../scripts/tokenHelpers.js'
 import { transferControl } from '../scripts/controlHelpers.js'
 import { buyTokens, finalize, getCap, getPrice, getPriceInWei, getBasePrice, getBasePriceInWei } from '../scripts/tokenSaleHelpers.js'
@@ -34,12 +35,14 @@ contract('Crowdsale', (accounts) => {
   let wallet = accounts[5]
   let proofWalletAddress = accounts[9]
 
-  let startBlock
-  let endBlock
+  let startTime
+  let endTime
+  let contractUploadTime
 
   beforeEach(async function() {
-    startBlock = web3.eth.blockNumber + 10
-    endBlock = web3.eth.blockNumber + 20
+    contractUploadTime = latestTime()
+    startTime = contractUploadTime.add(1, 'day').unix()
+    endTime = contractUploadTime.add(31, 'day').unix()
 
     proofPresaleToken = await ProofPresaleToken.new()
     proofPresaleTokenAddress = await getAddress(proofPresaleToken)
@@ -57,8 +60,8 @@ contract('Crowdsale', (accounts) => {
 
     tokenSale = await TokenSale.new(
       proofTokenAddress,
-      startBlock,
-      endBlock)
+      startTime,
+      endTime)
 
     tokenSaleAddress = await getAddress(tokenSale)
   })
@@ -66,22 +69,20 @@ contract('Crowdsale', (accounts) => {
   describe('Token Information', async function() {
     beforeEach(async function() {
       await transferControl(proofToken, fund, tokenSaleAddress)
+      await increaseTime(moment.duration(1.01, 'day'))
     })
 
     it('should return the correct token supply', async function() {
-      await advanceToBlock(startBlock)
       await buyTokens(tokenSale, sender, 1 * ether)
 
       let supply = await getTotalSupply(proofToken)
       let tokenSaleDisplaySupply = await getTotalSupply(tokenSale)
-
       supply.should.be.equal(tokenSaleDisplaySupply)
     })
 
     // the token balance of each token holder can also be displayed via the token sale contract - by routing towards the proof token balanceOf() method
     // we verify both balances are equal
     it('should return the correct token balance (tokenSale.balanceOf must be equal to proofToken.balanceOf)', async function() {
-      await advanceToBlock(startBlock)
       await buyTokens(tokenSale, sender, 1 * ether)
       let senderBalance = await getTokenBalance(proofToken, sender)
       let senderDisplayBalance = await getTokenBalance(tokenSale, sender)
@@ -92,7 +93,7 @@ contract('Crowdsale', (accounts) => {
   describe('Initial State', function () {
     beforeEach(async function() {
       await transferControl(proofToken, fund, tokenSaleAddress)
-      await advanceToBlock(startBlock)
+      await increaseTime(moment.duration(1.01, 'day'))
     })
 
     it('should initially set the token wallet', async function() {
@@ -126,39 +127,12 @@ contract('Crowdsale', (accounts) => {
     })
   })
 
-  describe('Initial State after presale', async function() {
-    beforeEach(async function() {
-      startBlock = web3.eth.blockNumber + 10
-      endBlock = web3.eth.blockNumber + 20
-
-      proofPresaleToken = await ProofPresaleToken.new()
-      proofPresaleTokenAddress = await getAddress(proofPresaleToken)
-
-      proofToken = await ProofToken.new(
-        '0x0',
-        '0x0',
-        0,
-        'Proof Token',
-        18,
-        'PRFT',
-        true)
-
-      proofTokenAddress = await getAddress(proofToken)
-
-      tokenSale = await TokenSale.new(
-        proofTokenAddress,
-        startBlock,
-        endBlock)
-
-      tokenSaleAddress = await getAddress(tokenSale)
-    })
-  })
-
   describe('Finalized state', function () {
     beforeEach(async function() {
-      startBlock = web3.eth.blockNumber + 10
-      endBlock = web3.eth.blockNumber + 20
 
+      contractUploadTime = latestTime()
+      startTime = contractUploadTime.add(1, 'day').unix()
+      endTime = contractUploadTime.add(31, 'day').unix()
       proofPresaleToken = await ProofPresaleToken.new()
       proofPresaleTokenAddress = await getAddress(proofPresaleToken)
 
@@ -175,8 +149,8 @@ contract('Crowdsale', (accounts) => {
 
       tokenSale = await TokenSale.new(
         proofTokenAddress,
-        startBlock,
-        endBlock)
+        startTime,
+        endTime)
 
       tokenSaleAddress = await getAddress(tokenSale)
       transferControl(proofToken, fund, tokenSaleAddress)

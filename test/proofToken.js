@@ -12,6 +12,8 @@ var chaiStats = require('chai-stats')
 var chaiBigNumber = require('chai-bignumber')(BigNumber)
 chai.use(chaiAsPromised).use(chaiBigNumber).use(chaiStats).should()
 
+import moment from 'moment'
+
 import {
   DEFAULT_GAS,
   DEFAULT_GAS_PRICE,
@@ -20,7 +22,9 @@ import {
 
 import {
   getAddress,
-  expectInvalidOpcode
+  expectInvalidOpcode,
+  latestTime,
+  increaseTime
 } from '../scripts/helpers.js'
 
 import {
@@ -68,12 +72,12 @@ contract('proofToken', (accounts) => {
   let hacker = accounts[3]
   let wallet = accounts[4]
 
-  let startBlock
-  let endBlock
+  let startTime
+  let endTime
+  let contractUploadTime
 
   beforeEach(async function() {
-    startBlock = web3.eth.blockNumber + 10
-    endBlock = web3.eth.blockNumber + 20
+
 
     proofPresaleToken = await ProofPresaleToken.new()
 
@@ -88,10 +92,14 @@ contract('proofToken', (accounts) => {
 
     proofTokenAddress = await getAddress(proofToken)
 
+    contractUploadTime = latestTime()
+    startTime = contractUploadTime.add(1, 'day').unix()
+    endTime = contractUploadTime.add(31, 'day').unix()
+
     tokenSale = await TokenSale.new(
       proofTokenAddress,
-      startBlock,
-      endBlock
+      startTime,
+      endTime
     )
 
     tokenSaleAddress = await getAddress(tokenSale)
@@ -100,6 +108,7 @@ contract('proofToken', (accounts) => {
   describe('Initial State', function () {
     beforeEach(async function() {
       await transferControl(proofToken, fund, tokenSaleAddress)
+      await increaseTime(moment.duration(1.01, 'day'))
     })
 
     it('should initially be controlled by the token sale contract', async function() {

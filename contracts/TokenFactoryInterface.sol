@@ -9,5 +9,5 @@ contract TokenFactoryInterface {
         uint _snapshotBlock,
         string _tokenName,
         string _tokenSymbol
-      ) returns (ProofToken newToken);
+      ) public returns (ProofToken newToken);
 }

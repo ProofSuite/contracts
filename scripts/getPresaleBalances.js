@@ -2,18 +2,20 @@
 
     const csv = require('csv-parser')
     const json2csv = require('json2csv')
+    const Web3 = require('web3')
 
     const fs = require('fs')
     const request = require('async-request')
     const csvdata = require('csvdata')
     const awaitEach = require('await-each')
 
-    let config = require('./config')
+    let config = require('../config')
     let getTokenBalance = require('./tokenHelpers').getTokenBalance
 
+    let presaleToken = config.addresses.ethereum.PRESALE_TOKEN
 
     const ProofPresaleToken = artifacts.require('./ProofPresaleToken.sol')
-    const proofPresaleToken = await ProofPresaleToken.at('0x2469f31A34FCaAc0debf73806cE39B2388874B13')
+    const proofPresaleToken = await ProofPresaleToken.at(presaleToken)
     const provider = artifacts.options.provider
     const web3 = new Web3(provider)
 
@@ -21,7 +23,7 @@
     var balances = [];
 
     const writeData = new Promise((resolve, reject) => {
-      fs.createReadStream('./addresses.csv')
+      fs.createReadStream('./scripts/addresses.csv')
         .pipe(csv())
         .on('data', function(data) {
           addresses.push(data['Addresses'])

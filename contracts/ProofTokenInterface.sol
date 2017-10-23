@@ -18,21 +18,20 @@ contract ProofTokenInterface is Controllable {
   event Approval(address indexed _owner, address indexed _spender, uint256 _amount);
   event Transfer(address indexed from, address indexed to, uint256 value);
 
-  function totalSupply() constant returns (uint);
-  function totalSupplyAt(uint _blockNumber) constant returns(uint);
-  function balanceOf(address _owner) constant returns (uint256 balance);
-  function balanceOfAt(address _owner, uint _blockNumber) constant returns (uint);
-  function transfer(address _to, uint256 _amount) returns (bool success);
-  function transferFrom(address _from, address _to, uint256 _amount) returns (bool success);
-  function doTransfer(address _from, address _to, uint _amount) internal returns(bool);
-  function approve(address _spender, uint256 _amount) returns (bool success);
-  function approveAndCall(address _spender, uint256 _amount, bytes _extraData) returns (bool success);
-  function allowance(address _owner, address _spender) constant returns (uint256 remaining);
-  function mint(address _owner, uint _amount) returns (bool);
-  function importPresaleBalances(address[] _addresses, uint256[] _balances, address _presaleAddress) returns (bool);
-  function lockPresaleBalances() returns (bool);
-  function finishMinting() returns (bool);
-  function enableTransfers(bool _transfersEnabled);
-  function createCloneToken(uint _snapshotBlock, string _cloneTokenName, string _cloneTokenSymbol) returns (address);
+  function totalSupply() public constant returns (uint);
+  function totalSupplyAt(uint _blockNumber) public constant returns(uint);
+  function balanceOf(address _owner) public constant returns (uint256 balance);
+  function balanceOfAt(address _owner, uint _blockNumber) public constant returns (uint);
+  function transfer(address _to, uint256 _amount) public returns (bool success);
+  function transferFrom(address _from, address _to, uint256 _amount) public returns (bool success);
+  function approve(address _spender, uint256 _amount) public returns (bool success);
+  function approveAndCall(address _spender, uint256 _amount, bytes _extraData) public returns (bool success);
+  function allowance(address _owner, address _spender) public constant returns (uint256 remaining);
+  function mint(address _owner, uint _amount) public returns (bool);
+  function importPresaleBalances(address[] _addresses, uint256[] _balances, address _presaleAddress) public returns (bool);
+  function lockPresaleBalances() public returns (bool);
+  function finishMinting() public returns (bool);
+  function enableTransfers(bool _transfersEnabled) public;
+  function createCloneToken(uint _snapshotBlock, string _cloneTokenName, string _cloneTokenSymbol) public returns (address);
 
 }

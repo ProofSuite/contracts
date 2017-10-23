@@ -5,6 +5,8 @@ var chaiStats = require('chai-stats')
 var chaiBigNumber = require('chai-bignumber')(BigNumber)
 chai.use(chaiAsPromised).use(chaiBigNumber).use(chaiStats).should()
 
+import moment from 'moment'
+
 import { DEFAULT_GAS,
          DEFAULT_GAS_PRICE,
          ether } from '../scripts/testConfig.js'
@@ -13,7 +15,9 @@ import { getAddress,
          sendTransaction,
          expectInvalidOpcode,
          getBalance,
-         advanceToBlock } from '../scripts/helpers.js'
+         advanceToBlock,
+         latestTime,
+         increaseTime } from '../scripts/helpers.js'
 
 import { getTotalSupply,
          getTokenBalance,
@@ -47,12 +51,12 @@ contract('Crowdsale', (accounts) => {
   let sender = accounts[1]
   let wallet = accounts[5]
 
-  let startBlock
-  let endBlock
+  let startTime
+  let endTime
+  let contractUploadTime
 
   beforeEach(async function() {
-    startBlock = web3.eth.blockNumber + 10
-    endBlock = web3.eth.blockNumber + 20
+
 
     proofToken = await ProofToken.new(
       '0x0',
@@ -65,12 +69,18 @@ contract('Crowdsale', (accounts) => {
 
     proofTokenAddress = await getAddress(proofToken)
 
+    contractUploadTime = latestTime()
+    startTime = contractUploadTime.add(1, 'day').unix()
+    endTime = contractUploadTime.add(31, 'day').unix()
+    
     tokenSale = await TokenSale.new(
       proofTokenAddress,
-      startBlock,
-      endBlock)
+      startTime,
+      endTime)
 
+    
     tokenSaleAddress = await getAddress(tokenSale)
+
   })
 
   describe('Starting and Ending Period', async function() {
@@ -80,18 +90,19 @@ contract('Crowdsale', (accounts) => {
     })
 
     it('should reject payments before start', async function() {
+      await increaseTime(moment.duration(0.99, 'day'))
       await expectInvalidOpcode(tokenSale.buyTokens(sender, { value: 1 * ether, from: sender }))
       await expectInvalidOpcode(tokenSale.send(1 * ether, { from: sender }))
     })
 
     it('should accepts payments after start', async function() {
-      await advanceToBlock(startBlock)
+      await increaseTime(moment.duration(1.01, 'day'))
       await tokenSale.send(1 * ether, { from: sender }).should.be.fulfilled
       await tokenSale.buyTokens(sender, { value: 1 * ether, from: sender }).should.be.fulfilled
     })
 
     it('should reject payments after end', async function() {
-      await advanceToBlock(endBlock)
+      await increaseTime(moment.duration(32, 'day'))
       await expectInvalidOpcode(tokenSale.send(1 * ether, { from: sender }))
       await expectInvalidOpcode(tokenSale.buyTokens(sender, { value: 1 * ether, from: sender }))
     })
@@ -101,7 +112,7 @@ contract('Crowdsale', (accounts) => {
     beforeEach(async function() {
       await transferControl(proofToken, fund, tokenSaleAddress)
       await enableTransfers(tokenSale, fund)
-      await advanceToBlock(startBlock)
+      await increaseTime(moment.duration(1.01, 'day')) 
     })
 
     it('should accepts ether transactions sent to contract', async function() {
@@ -195,7 +206,7 @@ contract('Crowdsale', (accounts) => {
     beforeEach(async function() {
       await transferControl(proofToken, fund, tokenSaleAddress)
       await enableTransfers(tokenSale, fund)
-      await advanceToBlock(startBlock)
+      await increaseTime(moment.duration(1.01, 'day')) 
     })
 
     it('should initially return 15% premium price', async function() {
@@ -246,7 +257,7 @@ contract('Crowdsale', (accounts) => {
   describe('Buying Tokens', async function() {
     beforeEach(async function() {
       await transferControl(proofToken, fund, tokenSaleAddress)
-      await advanceToBlock(startBlock)
+      await increaseTime(moment.duration(1.01, 'day')) 
     })
 
     it('should offer 14.20 tokens for 1 ether invested if less than 5% of the tokens were sold', async function() {

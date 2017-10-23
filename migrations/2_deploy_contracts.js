@@ -39,8 +39,8 @@ module.exports = function(deployer) {
         TokenFactory.address,
         "0x0000000000000000000000000000000000000000",
         0,
-        "Test",
-        "Test",
+        "Proof Test",
+        "PRFT Test",
         {gas: gas, gasPrice: gasPrice }
       )
     })
@@ -48,8 +48,8 @@ module.exports = function(deployer) {
       return deployer.deploy(
         TokenSale,
         ProofToken.address,
-        4376887,
-        5376887,
+        1508670969,
+        1511349369,
         {gas: gas, gasPrice: gasPrice }
       )
     })

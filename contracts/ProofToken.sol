@@ -61,7 +61,7 @@ contract ProofToken is Controllable {
     uint256 _parentSnapShotBlock,
     string _tokenName,
     string _tokenSymbol
-    ) {
+    ) public {
       tokenFactory = TokenFactoryInterface(_tokenFactory);
       parentToken = ProofTokenInterface(_parentToken);
       parentSnapShotBlock = _parentSnapShotBlock;
@@ -73,7 +73,7 @@ contract ProofToken is Controllable {
       version = '0.1';
   }
 
-  function() payable {
+  function() public payable {
     revert();
   }
 
@@ -357,7 +357,7 @@ contract ProofToken is Controllable {
   }
 
   /// @dev Helper function to return a min betwen the two uints
-  function min(uint a, uint b) internal returns (uint) {
+  function min(uint a, uint b) internal constant returns (uint) {
       return a < b ? a : b;
   }
 

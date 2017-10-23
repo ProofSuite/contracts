@@ -19,8 +19,8 @@ contract TokenSale is Pausable {
   uint256 public totalSupply;
   uint256 public contributors;
   uint256 public decimalsMultiplier;
-  uint256 public startBlock;
-  uint256 public endBlock;
+  uint256 public startTime;
+  uint256 public endTime;
   uint256 public remainingTokens;
   uint256 public allocatedTokens;
   bool public finalized;
@@ -55,14 +55,14 @@ contract TokenSale is Pausable {
 
   function TokenSale(
     address _tokenAddress,
-    uint256 _startBlock,
-    uint256 _endBlock) {
+    uint256 _startTime,
+    uint256 _endTime) public {
     require(_tokenAddress != 0x0);
-    require(_startBlock > 0);
-    require(_endBlock > _startBlock);
+    require(_startTime > 0);
+    require(_endTime > _startTime);
 
-    startBlock = _startBlock;
-    endBlock = _endBlock;
+    startTime = _startTime;
+    endTime = _endTime;
     proofToken = ProofTokenInterface(_tokenAddress);
 
     decimalsMultiplier = (10 ** 18);
@@ -72,7 +72,7 @@ contract TokenSale is Pausable {
   /**
    * High level token purchase function
    */
-  function() payable {
+  function() public payable {
     buyTokens(msg.sender);
   }
 
@@ -104,7 +104,7 @@ contract TokenSale is Pausable {
    * Get the price in wei for current premium
    * @return price
    */
-  function getPriceInWei() public returns (uint256) {
+  function getPriceInWei() constant public returns (uint256) {
 
     uint256 price;
 
@@ -133,9 +133,9 @@ contract TokenSale is Pausable {
   * Validates the purchase (period, minimum amount, within cap)
   * @return {bool} valid
   */
-  function validPurchase() internal returns (bool) {
-    uint256 current = block.number;
-    bool withinPeriod = current >= startBlock && current <= endBlock;
+  function validPurchase() internal constant returns (bool) {
+    uint256 current = now;
+    bool withinPeriod = current >= startTime && current <= endTime;
     bool nonZeroPurchase = msg.value != 0;
 
     return nonZeroPurchase && withinPeriod;

@@ -43,16 +43,21 @@
     "webpack-dev-server": "^2.3.0"
   },
   "dependencies": {
+    "@digix/tempo": "~0.2.0",
     "@digix/truffle-lightwallet-provider": "~0.1.2",
+    "async-request": "~1.2.0",
+    "await-each": "~1.1.0",
     "bluebird": "~3.5.0",
     "chai": "~4.1.2",
     "chai-as-promised": "~7.1.1",
     "chai-bignumber": "~2.0.1",
     "chai-stats": "~0.3.0",
     "csv-parser": "~1.11.0",
+    "csvdata": "~1.4.0",
     "ethereum-address": "0.0.4",
     "ethereumjs-testrpc": "~4.1.3",
     "json2csv": "~3.11.1",
+    "moment": "~2.19.1",
     "solc": "~0.4.17"
   }
 }
