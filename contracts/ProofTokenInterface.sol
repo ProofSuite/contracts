@@ -31,7 +31,8 @@ contract ProofTokenInterface is Controllable {
   function importPresaleBalances(address[] _addresses, uint256[] _balances, address _presaleAddress) public returns (bool);
   function lockPresaleBalances() public returns (bool);
   function finishMinting() public returns (bool);
-  function enableTransfers(bool _transfersEnabled) public;
+  function enableTransfers(bool _value) public;
+  function enableMasterTransfers(bool _value) public;
   function createCloneToken(uint _snapshotBlock, string _cloneTokenName, string _cloneTokenSymbol) public returns (address);
 
 }

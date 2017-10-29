@@ -23,7 +23,9 @@ contract TokenSale is Pausable {
   uint256 public endTime;
   uint256 public remainingTokens;
   uint256 public allocatedTokens;
+
   bool public finalized;
+  bool public proofTokensAllocated;
 
   uint256 public constant BASE_PRICE_IN_WEI = 88000000000000000;
 
@@ -165,46 +167,51 @@ contract TokenSale is Pausable {
   // }
 
   /**
-  * Controller Interface transfer callback method
-  * @param _from {address}
-  * @param _to {address}
-  * @param _amount {number}
-  */
-  function onTransfer(address _from, address _to, uint _amount) public returns (bool) {
-    OnTransfer(_from, _to, _amount);
-    return true;
-  }
-
-  /**
-  * Controller Interface transfer callback method
-  * @param _owner {address}
-  * @param _spender {address}
-  * @param _amount {number}
-   */
-  function onApprove(address _owner, address _spender, uint _amount) public returns (bool) {
-    OnApprove(_owner, _spender, _amount);
-    return true;
-  }
-
-  /**
   * Change the Proof Token controller
   * @param _newController {address}
   */
-  function changeController(address _newController) public onlyOwner {
+  function changeController(address _newController) public {
     proofToken.transferControl(_newController);
   }
 
 
-  function enableTransfers(bool _transfersEnabled) public onlyOwner {
-    proofToken.enableTransfers(_transfersEnabled);
+  function enableTransfers() public onlyOwner {
+    if (now < endTime) {
+      require(msg.sender == owner);
+    }
+
+    proofToken.enableTransfers(true);
+  }
+
+  function lockTransfers() public onlyOwner {
+    require(now < endTime);
+    proofToken.enableTransfers(false);
+  }
+
+  function enableMasterTransfers() public onlyOwner {
+    proofToken.enableMasterTransfers(true);
+  }
+
+  function lockMasterTransfers() public onlyOwner {
+    proofToken.enableMasterTransfers(false);
+  }
+
+  function isContract(address _addr) constant internal returns(bool) {
+      uint size;
+      if (_addr == 0)
+        return false;
+      assembly {
+          size := extcodesize(_addr)
+      }
+      return size>0;
   }
 
   /**
   * Allocates Proof tokens to the given Proof Token wallet
-  * @param _tokens {uint256}
   */
-  function allocateProofTokens(uint256 _tokens) public onlyOwner whenNotFinalized {
-    proofToken.mint(PROOF_TOKEN_WALLET, _tokens);
+  function allocateProofTokens() public onlyOwner whenNotFinalized {
+    proofToken.mint(PROOF_TOKEN_WALLET, TOKENS_ALLOCATED_TO_PROOF);
+    proofTokensAllocated = true;
   }
 
   /**

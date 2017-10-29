@@ -1,6 +1,8 @@
 const h = require('../scripts/helpers.js')
+const config = require('../config.js')
 import { getAddress } from './helpers.js'
-import { DEFAULT_GAS, DEFAULT_GAS_PRICE, MAX_GAS } from './config.js'
+
+let { DEFAULT_GAS, DEFAULT_GAS_PRICE, MAX_GAS } = config.constants;
 
 /**
  * @description Get owner of token contract
@@ -195,7 +197,7 @@ const claimTokens = async(token, sender) => {
  * @returns transaction receipt
  */
 const importBalances = async(token, caller, addresses, balances) => {
-  let txn = await token.importPresaleBalances(addresses, balances, { from: caller, gas: DEFAULT_GAS_PRICE })
+  let txn = await token.importPresaleBalances(addresses, balances, { from: caller, gas: MAX_GAS, gasPrice: DEFAULT_GAS_PRICE })
   let txnReceipt = await h.waitUntilTransactionsMined(txn.tx)
   return txnReceipt
 }

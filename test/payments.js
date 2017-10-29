@@ -57,28 +57,26 @@ contract('Crowdsale', (accounts) => {
 
   beforeEach(async function() {
 
-
     proofToken = await ProofToken.new(
       '0x0',
       '0x0',
       0,
-      'Proof Token',
-      18,
-      'PRFT',
-      true)
+      'Proof Token Test',
+      'PRFT Test'
+    )
 
     proofTokenAddress = await getAddress(proofToken)
 
     contractUploadTime = latestTime()
     startTime = contractUploadTime.add(1, 'day').unix()
     endTime = contractUploadTime.add(31, 'day').unix()
-    
+
     tokenSale = await TokenSale.new(
       proofTokenAddress,
       startTime,
       endTime)
 
-    
+
     tokenSaleAddress = await getAddress(tokenSale)
 
   })
@@ -102,7 +100,7 @@ contract('Crowdsale', (accounts) => {
     })
 
     it('should reject payments after end', async function() {
-      await increaseTime(moment.duration(32, 'day'))
+      await increaseTime(moment.duration(33, 'day'))
       await expectInvalidOpcode(tokenSale.send(1 * ether, { from: sender }))
       await expectInvalidOpcode(tokenSale.buyTokens(sender, { value: 1 * ether, from: sender }))
     })
@@ -112,7 +110,7 @@ contract('Crowdsale', (accounts) => {
     beforeEach(async function() {
       await transferControl(proofToken, fund, tokenSaleAddress)
       await enableTransfers(tokenSale, fund)
-      await increaseTime(moment.duration(1.01, 'day')) 
+      await increaseTime(moment.duration(1.01, 'day'))
     })
 
     it('should accepts ether transactions sent to contract', async function() {
@@ -206,7 +204,7 @@ contract('Crowdsale', (accounts) => {
     beforeEach(async function() {
       await transferControl(proofToken, fund, tokenSaleAddress)
       await enableTransfers(tokenSale, fund)
-      await increaseTime(moment.duration(1.01, 'day')) 
+      await increaseTime(moment.duration(1.01, 'day'))
     })
 
     it('should initially return 15% premium price', async function() {
@@ -257,7 +255,7 @@ contract('Crowdsale', (accounts) => {
   describe('Buying Tokens', async function() {
     beforeEach(async function() {
       await transferControl(proofToken, fund, tokenSaleAddress)
-      await increaseTime(moment.duration(1.01, 'day')) 
+      await increaseTime(moment.duration(1.01, 'day'))
     })
 
     it('should offer 14.20 tokens for 1 ether invested if less than 5% of the tokens were sold', async function() {

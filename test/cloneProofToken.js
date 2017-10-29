@@ -12,6 +12,8 @@ var chaiStats = require('chai-stats')
 var chaiBigNumber = require('chai-bignumber')(BigNumber)
 chai.use(chaiAsPromised).use(chaiBigNumber).use(chaiStats).should()
 
+import moment from 'moment'
+
 import {
   ether
 } from '../scripts/testConfig.js'
@@ -19,7 +21,8 @@ import {
 import {
   getAddress,
   getTxnReceiptTopics,
-  advanceToBlock
+  latestTime,
+  increaseTime
 } from '../scripts/helpers.js'
 
 import {
@@ -31,7 +34,8 @@ import {
 } from '../scripts/tokenHelpers.js'
 
 import {
-  buyTokens
+  buyTokens,
+  enableTransfers
 } from '../scripts/tokenSaleHelpers.js'
 
 import {
@@ -58,8 +62,9 @@ contract('cloneProofToken', ([fund, buyer, buyer2, wallet]) => {
 
   let proofTokenAddress
   let tokenSaleAddress
-  let startBlock
-  let endBlock
+  let startTime
+  let endTime
+  let contractUploadTime
 
   let txnReceipt
   let topics
@@ -67,9 +72,6 @@ contract('cloneProofToken', ([fund, buyer, buyer2, wallet]) => {
   let clonedToken
 
   beforeEach(async function() {
-
-    startBlock = web3.eth.blockNumber + 10
-    endBlock = web3.eth.blockNumber + 1000
 
     proofTokenFactory = await TokenFactory.new()
     proofTokenFactoryAddress = await getAddress(proofTokenFactory)
@@ -84,16 +86,20 @@ contract('cloneProofToken', ([fund, buyer, buyer2, wallet]) => {
 
     proofTokenAddress = await getAddress(proofToken)
 
+    contractUploadTime = latestTime()
+    startTime = contractUploadTime.add(1, 'day').unix()
+    endTime = contractUploadTime.add(1, 'day').unix()
+
     tokenSale = await TokenSale.new(
       proofTokenAddress,
-      startBlock,
-      endBlock
+      startTime,
+      endTime
     )
 
     tokenSaleAddress = await getAddress(tokenSale)
 
     await transferControl(proofToken, fund, tokenSaleAddress)
-    await advanceToBlock(startBlock)
+    await increaseTime(moment.duration(1.01, 'day'))
   })
 
   describe('Cloning: ', function () {
@@ -134,8 +140,8 @@ contract('cloneProofToken', ([fund, buyer, buyer2, wallet]) => {
 
       let clonedTokenSale = await TokenSale.new(
         clonedTokenAddress,
-        startBlock,
-        endBlock
+        startTime,
+        endTime
       )
 
       let clonedTokenSaleAddress = await getAddress(clonedTokenSale)
@@ -152,6 +158,15 @@ contract('cloneProofToken', ([fund, buyer, buyer2, wallet]) => {
 
     it('cloned tokens should be transferable', async function() {
 
+      let clonedTokenSale = await TokenSale.new(
+        clonedTokenAddress,
+        startTime,
+        endTime
+      )
+
+      let clonedTokenSaleAddress = await getAddress(clonedTokenSale)
+      await transferControl(clonedToken, fund, clonedTokenSaleAddress)
+      await enableTransfers(clonedTokenSale, fund)
       let buyer1InitialBalance = await getTokenBalance(clonedToken, buyer)
       let buyer2InitialBalance = await getTokenBalance(clonedToken, buyer2)
 

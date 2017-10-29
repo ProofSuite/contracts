@@ -7,7 +7,7 @@ let config = {
   },
   constants: {
     DEFAULT_GAS: 2 * 10 ** 6,
-    MAX_GAS: 2.7 * 10 ** 6,
+    MAX_GAS: 4.7 * 10 ** 6,
     DEFAULT_LOW_GAS_PRICE: 0.1 * 10 ** 9,
     DEFAULT_GAS_PRICE: 1 * 10 ** 9,
     DEFAULT_HIGH_GAS_PRICE: 2 * 10 ** 9,

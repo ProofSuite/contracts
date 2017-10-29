@@ -32,7 +32,10 @@ import {
 
 import {
   buyTokens,
-  enableTransfers
+  enableTransfers,
+  lockTransers,
+  enableMasterTransfers,
+  lockMasterTransfers
 } from '../scripts/tokenSaleHelpers.js'
 
 import {
@@ -69,9 +72,7 @@ contract('Crowdsale', (accounts) => {
   let contractUploadTime
 
   beforeEach(async function() {
-    contractUploadTime = latestTime()
-    startTime = contractUploadTime.add(1, 'day').unix()
-    endTime = contractUploadTime.add(31, 'day').unix()
+
 
     proofPresaleToken = await ProofPresaleToken.new()
     proofPresaleTokenAddress = await getAddress(proofPresaleToken)
@@ -80,12 +81,15 @@ contract('Crowdsale', (accounts) => {
       '0x0',
       '0x0',
       0,
-      'Proof Token',
-      18,
-      'PRFT',
-      true)
+      'Proof Token Test',
+      'PRFT Test'
+    )
 
     proofTokenAddress = await getAddress(proofToken)
+
+    contractUploadTime = latestTime()
+    startTime = contractUploadTime.add(1, 'day').unix()
+    endTime = contractUploadTime.add(31, 'day').unix()
 
     tokenSale = await TokenSale.new(
       proofTokenAddress,

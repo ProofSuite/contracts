@@ -178,13 +178,25 @@ const finalize = async (tokenSale, caller) => {
 }
 
 const enableTransfers = async (tokenSale, caller) => {
-  let txn = await tokenSale.enableTransfers(true, { from: caller })
+  let txn = await tokenSale.enableTransfers({ from: caller })
   let txnReceipt = await waitUntilTransactionsMined(txn.tx)
   return txnReceipt
 }
 
 const lockTransfers = async (tokenSale, caller) => {
-  let txn = await tokenSale.enableTransfers(false, {from: caller })
+  let txn = await tokenSale.lockTransfers({ from: caller })
+  let txnReceipt = await waitUntilTransactionsMined(txn.tx)
+  return txnReceipt
+}
+
+const enableMasterTransfers = async (tokenSale, caller) => {
+  let txn = await tokenSale.enableMasterTransfers({ from: caller })
+  let txnReceipt = await waitUntilTransactionsMined(txn.tx)
+  return txnReceipt
+}
+
+const lockMasterTransfers = async (tokenSale, caller) => {
+  let txn = await tokenSale.lockMasterTransfers({from: caller })
   let txnReceipt = await waitUntilTransactionsMined(txn.tx)
   return txnReceipt
 }
@@ -207,5 +219,7 @@ module.exports = {
   getContributors,
   finalize,
   enableTransfers,
-  lockTransfers
+  lockTransfers,
+  enableMasterTransfers,
+  lockMasterTransfers
 }

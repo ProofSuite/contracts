@@ -85,10 +85,9 @@ contract('proofToken', (accounts) => {
       '0x0',
       '0x0',
       0,
-      'Proof Token',
-      18,
-      'PRFT',
-      true)
+      'Proof Token Test',
+      'PRFT Test'
+    )
 
     proofTokenAddress = await getAddress(proofToken)
 
@@ -285,11 +284,12 @@ contract('proofToken', (accounts) => {
   describe('Transfers', function () {
 
     beforeEach(async function() {
-      await enableTransfers(proofToken, fund)
+      await mintToken(proofToken, fund, sender, 10000)
+      await transferControl(proofToken, fund, tokenSaleAddress)
+      await enableTransfers(tokenSale, fund)
     })
 
-    it('should be transferable ', async function() {
-      await mintToken(proofToken, fund, sender, 10000)
+    it('should be transferable', async function() {
 
       let initialSenderBalance = await getTokenBalance(proofToken, sender)
       let initialReceiverBalance = await getTokenBalance(proofToken, receiver)
@@ -307,20 +307,17 @@ contract('proofToken', (accounts) => {
     })
 
     it('should not allow to transfer more than balance', async function() {
-      await mintToken(proofToken, fund, sender, 100)
       let params = { from: sender, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
-      await expectInvalidOpcode(proofToken.transfer(receiver, 101, params))
+      await expectInvalidOpcode(proofToken.transfer(receiver, 10001, params))
     })
 
     it('tokens should not be transferable to the token contract (by mistake)', async function() {
-      await mintToken(proofToken, fund, sender, 1000)
       let params = { from: sender, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
       await expectInvalidOpcode(proofToken.transfer(proofTokenAddress, 1000, params))
     })
 
     it('tokens should not be transferable if transfers are locked', async function() {
-      await lockTransfers(proofToken, fund)
-      await mintToken(proofToken, fund, sender, 10000)
+      await lockTransfers(tokenSale, fund)
 
       let initialSenderBalance = await getTokenBalance(proofToken, sender)
       let initialReceiverBalance = await getTokenBalance(proofToken, receiver)
@@ -388,16 +385,16 @@ contract('proofToken', (accounts) => {
 
   describe('transferFrom: ', function () {
     beforeEach(async function() {
-      await enableTransfers(proofToken, fund)
+      await mintToken(proofToken, fund, sender, 1000)
+      await transferControl(proofToken, fund, tokenSaleAddress)
+      await enableTransfers(tokenSale, fund)
     })
 
     it('should throw if no allowance has been given', async function() {
-      await mintToken(proofToken, fund, sender, 1000)
       await expectInvalidOpcode(transferTokenFrom(proofToken, fund, sender, receiver, 1000))
     })
 
     it('should return correct allowance balance after approve call', async function() {
-      await mintToken(proofToken, fund, sender, 1000)
       await approve(proofToken, sender, receiver, 1000)
 
       let allowance = await getAllowance(proofToken, sender, receiver)
@@ -405,7 +402,6 @@ contract('proofToken', (accounts) => {
     })
 
     it('should allow transfer if amount is lower than allowance', async function() {
-      await mintToken(proofToken, fund, sender, 1000)
       await approve(proofToken, sender, receiver, 1000)
       await transferTokenFrom(proofToken, receiver, sender, receiver, 1000)
 
@@ -417,7 +413,6 @@ contract('proofToken', (accounts) => {
     })
 
     it('should return an exception if amount is higher than allowance', async function() {
-      await mintToken(proofToken, fund, sender, 1000)
       await approve(proofToken, sender, receiver, 500)
       await expectInvalidOpcode(transferTokenFrom(proofToken, receiver, sender, receiver, 501))
 

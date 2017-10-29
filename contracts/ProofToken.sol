@@ -33,6 +33,7 @@ contract ProofToken is Controllable {
   uint256 public parentSnapShotBlock;
   uint256 public creationBlock;
   bool public transfersEnabled;
+  bool public masterTransfersEnabled;
 
   mapping(address => Checkpoint[]) balances;
   mapping (address => mapping (address => uint)) allowed;
@@ -42,8 +43,8 @@ contract ProofToken is Controllable {
   bool public mintingFinished = false;
   bool public presaleBalancesLocked = false;
 
-  uint256 public constant TOKENS_ALLOCATED_TO_PROOF = 1181031 * (10 ** 18);
   uint256 public constant TOTAL_PRESALE_TOKENS = 112386712924725508802400;
+  address public constant MASTER_WALLET = 0x740C588C5556e523981115e587892be0961853B8;
 
   event Mint(address indexed to, uint256 amount);
   event MintFinished();
@@ -69,6 +70,7 @@ contract ProofToken is Controllable {
       symbol = _tokenSymbol;
       decimals = 18;
       transfersEnabled = false;
+      masterTransfersEnabled = false;
       creationBlock = block.number;
       version = '0.1';
   }
@@ -183,11 +185,6 @@ contract ProofToken is Controllable {
     //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
     require((_amount == 0) || (allowed[msg.sender][_spender] == 0));
 
-    // Alerts the token controller of the approve function call
-    if (isContract(controller)) {
-        require(ControllerInterface(controller).onApprove(msg.sender, _spender, _amount));
-    }
-
     allowed[msg.sender][_spender] = _amount;
     Approval(msg.sender, _spender, _amount);
     return true;
@@ -212,6 +209,13 @@ contract ProofToken is Controllable {
 
 
   function doTransfer(address _from, address _to, uint _amount) internal returns(bool) {
+
+    if (msg.sender != MASTER_WALLET) {
+      require(transfersEnabled);
+    } else {
+      require(masterTransfersEnabled);
+    }
+
     require(transfersEnabled);
     require(_amount > 0);
     require(parentSnapShotBlock < block.number);
@@ -221,11 +225,6 @@ contract ProofToken is Controllable {
     //  account the transfer returns false
     var previousBalanceFrom = balanceOfAt(_from, block.number);
     require(previousBalanceFrom >= _amount);
-
-    // Alerts the token controller of the transfer
-    if (isContract(controller)) {
-      require(ControllerInterface(controller).onTransfer(_from, _to, _amount));
-    }
 
     // First update the balance array with the new value for the address
     //  sending the tokens
@@ -304,8 +303,12 @@ contract ProofToken is Controllable {
   /**
    * Enable or block transfers - to be called in case of emergency
   */
-  function enableTransfers(bool _transfersEnabled) public onlyController {
-      transfersEnabled = _transfersEnabled;
+  function enableTransfers(bool _value) public onlyController {
+    transfersEnabled = _value;
+  }
+
+  function enableMasterTransfers(bool _value) public onlyController {
+    masterTransfersEnabled = _value;
   }
 
 
@@ -344,16 +347,6 @@ contract ProofToken is Controllable {
               Checkpoint storage oldCheckPoint = checkpoints[checkpoints.length-1];
               oldCheckPoint.value = uint128(_value);
           }
-  }
-
-  function isContract(address _addr) constant internal returns(bool) {
-      uint size;
-      if (_addr == 0)
-        return false;
-      assembly {
-          size := extcodesize(_addr)
-      }
-      return size>0;
   }
 
   /// @dev Helper function to return a min betwen the two uints
