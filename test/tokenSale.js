@@ -10,7 +10,7 @@ import { TOKENS_ALLOCATED_TO_PROOF, ether } from '../scripts/testConfig.js'
 import { getAddress, advanceToBlock, expectInvalidOpcode, waitUntilTransactionsMined, latestTime, increaseTime } from '../scripts/helpers.js'
 import { baseUnits, mintToken, getTokenBalance, getTotalSupply } from '../scripts/tokenHelpers.js'
 import { transferControl } from '../scripts/controlHelpers.js'
-import { buyTokens, finalize, getCap, getPrice, getPriceInWei, getBasePrice, getBasePriceInWei } from '../scripts/tokenSaleHelpers.js'
+import { enableTransfers, buyTokens, finalize, getCap, getPrice, getPriceInWei, getBasePrice, getBasePriceInWei } from '../scripts/tokenSaleHelpers.js'
 import { pause, unpause } from '../scripts/pausableHelpers'
 
 const assert = chai.assert
@@ -40,9 +40,7 @@ contract('Crowdsale', (accounts) => {
   let contractUploadTime
 
   beforeEach(async function() {
-    contractUploadTime = latestTime()
-    startTime = contractUploadTime.add(1, 'day').unix()
-    endTime = contractUploadTime.add(31, 'day').unix()
+
 
     proofPresaleToken = await ProofPresaleToken.new()
     proofPresaleTokenAddress = await getAddress(proofPresaleToken)
@@ -51,12 +49,15 @@ contract('Crowdsale', (accounts) => {
       '0x0',
       '0x0',
       0,
-      'Proof Token',
-      18,
-      'PRFT',
-      true)
+      'Proof Token Test',
+      'PRFT Test'
+    )
 
     proofTokenAddress = await getAddress(proofToken)
+
+    contractUploadTime = latestTime()
+    startTime = contractUploadTime.add(1, 'day').unix()
+    endTime = contractUploadTime.add(31, 'day').unix()
 
     tokenSale = await TokenSale.new(
       proofTokenAddress,
@@ -69,7 +70,8 @@ contract('Crowdsale', (accounts) => {
   describe('Token Information', async function() {
     beforeEach(async function() {
       await transferControl(proofToken, fund, tokenSaleAddress)
-      await increaseTime(moment.duration(1.01, 'day'))
+      await enableTransfers(tokenSale, fund)
+      await increaseTime(moment.duration(1.1, 'day'))
     })
 
     it('should return the correct token supply', async function() {
@@ -96,14 +98,9 @@ contract('Crowdsale', (accounts) => {
       await increaseTime(moment.duration(1.01, 'day'))
     })
 
-    it('should initially set the token wallet', async function() {
-      let tokenSaleWallet = await tokenSale.PROOF_TOKEN_WALLET.call()
-      tokenSaleWallet.should.be.equal('Correct wallet address')
-    })
-
     it('should initially set the multisig', async function() {
-      let tokenSaleWallet = await tokenSale.PROOF_MULTISIG.call()
-      tokenSaleWallet.should.be.equal('Correct wallet address')
+      let tokenSaleWallet = await tokenSale.proofMultiSig.call()
+      tokenSaleWallet.should.be.equal('0x99892ac6da1b3851167cb959fe945926bca89f09')
     })
 
     it('should initially be linked to the Proof token', async function() {
@@ -140,10 +137,9 @@ contract('Crowdsale', (accounts) => {
         '0x0',
         '0x0',
         0,
-        'Proof Token',
-        18,
-        'PRFT',
-        true)
+        'Proof Token Test',
+        'PRFT Test'
+      )
 
       proofTokenAddress = await getAddress(proofToken)
 

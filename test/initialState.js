@@ -6,7 +6,7 @@ var chaiBigNumber = require('chai-bignumber')(BigNumber)
 chai.use(chaiAsPromised).use(chaiBigNumber).use(chaiStats).should()
 
 import { TOKENS_ALLOCATED_TO_PROOF } from '../scripts/testConfig.js'
-import { getAddress } from '../scripts/helpers.js'
+import { getAddress, latestTime } from '../scripts/helpers.js'
 import { baseUnits, mintToken } from '../scripts/tokenHelpers.js'
 import { transferOwnership } from '../scripts/ownershipHelpers.js'
 import { transferControl } from '../scripts/controlHelpers.js'
@@ -20,8 +20,6 @@ const ProofPresaleToken = artifacts.require('./ProofPresaleToken.sol')
 const ProofToken = artifacts.require('./ProofToken.sol')
 const TokenSale = artifacts.require('./TokenSale.sol')
 
-debugger;
-
 contract('Crowdsale', (accounts) => {
   let fund = accounts[0]
   let tokenSale
@@ -33,15 +31,13 @@ contract('Crowdsale', (accounts) => {
   let sender = accounts[1]
   let proofWalletAddress = accounts[9]
 
-  let startBlock
-  let endBlock
+  let startTime
+  let endTime
+  let contractUploadTime
 
-  let PROOF_MULTISIG = 0x0
-  let PROOF_TOKEN_WALLET = 0x0
+  let proofMultiSig = '0x99892ac6da1b3851167cb959fe945926bca89f09'
 
   beforeEach(async function() {
-    startBlock = web3.eth.blockNumber + 10
-    endBlock = web3.eth.blockNumber + 20
 
     proofPresaleToken = await ProofPresaleToken.new()
     proofPresaleTokenAddress = await getAddress(proofPresaleToken)
@@ -50,17 +46,21 @@ contract('Crowdsale', (accounts) => {
       '0x0',
       '0x0',
       0,
-      'Proof Token',
-      18,
-      'PRFT',
-      true)
+      'Proof Token Test',
+      'PRFT Test'
+    )
 
     proofTokenAddress = await getAddress(proofToken)
 
+    contractUploadTime = latestTime()
+    startTime = contractUploadTime.add(1, 'day').unix()
+    endTime = contractUploadTime.add(31, 'day').unix()
+
+
     tokenSale = await TokenSale.new(
       proofTokenAddress,
-      startBlock,
-      endBlock)
+      startTime,
+      endTime)
 
     tokenSaleAddress = await getAddress(tokenSale)
   })
@@ -76,14 +76,9 @@ contract('Crowdsale', (accounts) => {
       transferControl(proofToken, fund, tokenSaleAddress)
     })
 
-    it('should initially set the wallet', async function() {
-      let wallet = await tokenSale.PROOF_TOKEN_WALLET.call()
-      wallet.should.be.equal(wallet)
-    })
-
     it('should initially set the multisig', async function() {
-      let multisig = await tokenSale.PROOF_MULTISIG.call()
-      multisig.should.be.equal(PROOF_MULTISIG)
+      let multisig = await tokenSale.proofMultiSig.call()
+      multisig.should.be.equal(proofMultiSig)
     })
 
     it('should initially be linked to the Proof token', async function() {
@@ -94,28 +89,6 @@ contract('Crowdsale', (accounts) => {
     it('Token base price should be equal to 0.0748 ether', async function() {
       let price = await getPrice(tokenSale)
       expect(price).almost.equal(0.85 * 0.088)
-    })
-  })
-
-  describe('Initial State after presale', async function() {
-    beforeEach(async function() {
-      startBlock = web3.eth.blockNumber + 10
-      endBlock = web3.eth.blockNumber + 20
-
-      proofPresaleToken = await ProofPresaleToken.new()
-      proofPresaleTokenAddress = await getAddress(proofPresaleToken)
-
-      await mintToken(proofPresaleToken, fund, sender, 10000)
-
-      proofToken = await ProofToken.new(proofPresaleTokenAddress, proofWalletAddress)
-      proofTokenAddress = await getAddress(proofToken)
-
-      tokenSale = await TokenSale.new(
-        proofTokenAddress,
-        startBlock,
-        endBlock)
-
-      tokenSaleAddress = await getAddress(tokenSale)
     })
   })
 })

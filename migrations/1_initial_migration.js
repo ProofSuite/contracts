@@ -8,7 +8,7 @@ module.exports = function(deployer) {
   if (deployer.network == "ethereum") {
     wallet = config.addresses.ethereum.WALLET_ADDRESS
     gas = config.constants.MAX_GAS
-    gasPrice = config.constants.DEFAULT_GAS_PRICE
+    gasPrice = config.constants.DEFAULT_HIGH_GAS_PRICE
   } else if (deployer.network == "ropsten") {
     wallet = config.addresses.ropsten.WALLET_ADDRESS
     gas = config.constants.DEFAULT_GAS

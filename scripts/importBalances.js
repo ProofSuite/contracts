@@ -33,7 +33,7 @@ module.exports = async function (callback) {
   }
 
   const importBalances = async(token, caller, addresses, balances) => {
-    let txn = await token.importPresaleBalances(addresses, balances, { from: caller, gas: config.constants.MAX_GAS, gasPrice: config.constants.DEFAULT_GAS_PRICE })
+    let txn = await token.importPresaleBalances(addresses, balances, { from: caller, gas: config.constants.MAX_GAS, gasPrice: config.constants.DEFAULT_HIGH_GAS_PRICE })
   }
 
   const run = async function(){
@@ -56,7 +56,6 @@ module.exports = async function (callback) {
     })
 
     await writeData
-    debugger;
     balances = balances.toNumber()
 
     let addressListNumber = addresses.length

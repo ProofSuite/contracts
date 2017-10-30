@@ -13,7 +13,7 @@ module.exports = async function (callback) {
       let tokenSale
       let sender
 
-      let newOwner = process.argv[2]
+      let newOwner = '0x2C798A55024Dd46657aD3233e271505D198b36e9'
 
       web3.eth.getAccounts(function(error,result) {
         let sender = result[0]
@@ -23,7 +23,7 @@ module.exports = async function (callback) {
 
       const run = async function(sender) {
         tokenSale = await TokenSale.deployed()
-        let txn = await tokenSale.transferControl(newOwner, { from: sender, gas: config.constants.DEFAULT_GAS, gasPrice: config.constants.DEFAULT_GAS_PRICE })
+        let txn = await tokenSale.transferOwnership(newOwner, { from: sender, gas: config.constants.DEFAULT_GAS, gasPrice: config.constants.DEFAULT_GAS_PRICE })
       }
     }
 

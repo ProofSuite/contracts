@@ -18,7 +18,7 @@ const getWallet = async (tokenSale) => {
 }
 
 const getMultisig = async (tokenSale) => {
-  let multisig = await tokenSale.PROOF_MULTISIG.call()
+  let multisig = await tokenSale.proofMultiSig.call()
   return multisig
 }
 

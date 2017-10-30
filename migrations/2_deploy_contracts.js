@@ -12,7 +12,7 @@ module.exports = function(deployer) {
     if (deployer.network == "ethereum") {
       wallet = config.addresses.ethereum.WALLET_ADDRESS
       gas = config.constants.MAX_GAS
-      gasPrice = config.constants.DEFAULT_GAS_PRICE
+      gasPrice = config.constants.DEFAULT_HIGH_GAS_PRICE
     } else if (deployer.network == "ropsten") {
       wallet = config.addresses.ropsten.WALLET_ADDRESS
       gas = config.constants.DEFAULT_GAS
@@ -48,8 +48,8 @@ module.exports = function(deployer) {
       return deployer.deploy(
         TokenSale,
         ProofToken.address,
-        1508670969,
-        1511349369,
+        1509350400,   // November 1st 1PM GMT: 1509541200
+        1509436800,   // December 1st 1PM GMT: 1512133200
         {gas: gas, gasPrice: gasPrice }
       )
     })

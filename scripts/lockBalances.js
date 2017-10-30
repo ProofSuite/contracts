@@ -21,7 +21,7 @@ module.exports = async function (callback) {
 
       const run = async function(sender) {
         proofToken = await ProofToken.deployed()
-        let txn = await proofToken.lockPresaleBalances({ from: sender, gas: config.constants.DEFAULT_GAS, gasPrice: config.constants.DEFAULT_GAS_PRICE })
+        let txn = await proofToken.lockPresaleBalances({ from: sender, gas: config.constants.DEFAULT_GAS, gasPrice: config.constants.DEFAULT_HIGH_GAS_PRICE })
       }
     }
 

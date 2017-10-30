@@ -286,11 +286,12 @@ contract('proofToken', (accounts) => {
     beforeEach(async function() {
       await mintToken(proofToken, fund, sender, 10000)
       await transferControl(proofToken, fund, tokenSaleAddress)
-      await enableTransfers(tokenSale, fund)
+
+
     })
 
     it('should be transferable', async function() {
-
+      await enableTransfers(tokenSale, fund)
       let initialSenderBalance = await getTokenBalance(proofToken, sender)
       let initialReceiverBalance = await getTokenBalance(proofToken, receiver)
 
@@ -307,17 +308,18 @@ contract('proofToken', (accounts) => {
     })
 
     it('should not allow to transfer more than balance', async function() {
+      await enableTransfers(tokenSale, fund)
       let params = { from: sender, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
       await expectInvalidOpcode(proofToken.transfer(receiver, 10001, params))
     })
 
     it('tokens should not be transferable to the token contract (by mistake)', async function() {
+      await enableTransfers(tokenSale, fund)
       let params = { from: sender, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
       await expectInvalidOpcode(proofToken.transfer(proofTokenAddress, 1000, params))
     })
 
     it('tokens should not be transferable if transfers are locked', async function() {
-      await lockTransfers(tokenSale, fund)
 
       let initialSenderBalance = await getTokenBalance(proofToken, sender)
       let initialReceiverBalance = await getTokenBalance(proofToken, receiver)
@@ -332,6 +334,68 @@ contract('proofToken', (accounts) => {
       receiverBalance.should.be.equal(initialReceiverBalance)
     })
 
+    it('transfers can be enabled after the tokensale ends', async function() {
+      await increaseTime(moment.duration(32, 'day'))
+      await enableTransfers(tokenSale, fund)
+
+
+      let initialSenderBalance = await getTokenBalance(proofToken, sender)
+      let initialReceiverBalance = await getTokenBalance(proofToken, receiver)
+
+      let params = { from: sender, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
+      await transferToken(proofToken, sender, receiver, 100)
+
+      let senderBalance = await getTokenBalance(proofToken, sender)
+      let receiverBalance = await getTokenBalance(proofToken, receiver)
+
+      senderBalance.should.be.equal(initialSenderBalance - 100)
+      receiverBalance.should.be.equal(initialReceiverBalance + 100)
+    })
+
+    it('transfers can be enabled by controller before the tokensale ends', async function() {
+      await enableTransfers(tokenSale, fund)
+
+      let initialSenderBalance = await getTokenBalance(proofToken, sender)
+      let initialReceiverBalance = await getTokenBalance(proofToken, receiver)
+
+      let params = { from: sender, gas:DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
+      await transferToken(proofToken, sender, receiver, 100)
+
+      let senderBalance = await getTokenBalance(proofToken, sender)
+      let receiverBalance = await getTokenBalance(proofToken, receiver)
+
+      senderBalance.should.be.equal(initialSenderBalance - 100)
+      receiverBalance.should.be.equal(initialReceiverBalance + 100)
+    })
+
+    it('transfers can not be enabled by non-controller before the tokensale ends', async function() {
+      await expectInvalidOpcode(tokenSale.enableTransfers({from: sender}))
+    })
+
+    it('transfers can be enabled by anyone after the tokensale ends', async function() {
+      await increaseTime(moment.duration(32, 'day'))
+      await enableTransfers(tokenSale, receiver)
+
+      let initialSenderBalance = await getTokenBalance(proofToken, sender)
+      let initialReceiverBalance = await getTokenBalance(proofToken, receiver)
+
+      let params = { from: sender, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
+      await transferToken(proofToken, sender, receiver, 100)
+
+      let senderBalance = await getTokenBalance(proofToken, sender)
+      let receiverBalance = await getTokenBalance(proofToken, receiver)
+
+      senderBalance.should.be.equal(initialSenderBalance - 100)
+      receiverBalance.should.be.equal(initialReceiverBalance + 100)
+    })
+
+    it('transfers can not be locked after the tokensale ends', async function() {
+      await increaseTime(moment.duration(32, 'day'))
+      await enableTransfers(tokenSale, receiver)
+      await expectInvalidOpcode(tokenSale.lockTransfers({from: sender}))
+    })
+
+    it('transfers')
 
   })
 
