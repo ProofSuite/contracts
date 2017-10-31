@@ -24,7 +24,7 @@ contract ProofToken is Controllable {
   bool public transfersEnabled;
 
   bool public masterTransfersEnabled;
-  address public masterWallet = 0x740C588C5556e523981115e587892be0961853B8;
+  address public masterWallet = 0xD8271285C255Ce31b9b25E46ac63619322Af5934;
 
 
   struct Checkpoint {

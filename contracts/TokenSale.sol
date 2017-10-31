@@ -194,6 +194,7 @@ contract TokenSale is Pausable {
   }
 
   function allocateProofTokens() public onlyOwner whenNotFinalized {
+    require(!proofTokensAllocated);
     proofToken.mint(proofMultiSig, TOKENS_ALLOCATED_TO_PROOF);
     proofTokensAllocated = true;
   }
