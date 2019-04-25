@@ -70,7 +70,7 @@ contract ProofToken is Controllable {
       version = '0.1';
   }
 
-  function() public payable {
+  function() external payable {
     revert();
   }
 
@@ -95,7 +95,7 @@ contract ProofToken is Controllable {
     //  genesis block for this token as that contains totalSupply of this
     //  token at this block number.
     if ((totalSupplyHistory.length == 0) || (totalSupplyHistory[0].fromBlock > _blockNumber)) {
-        if (address(parentToken) != 0) {
+        if (address(parentToken) != address(0)) {
             return parentToken.totalSupplyAt(min(_blockNumber, parentSnapShotBlock));
         } else {
             return 0;
@@ -129,7 +129,7 @@ contract ProofToken is Controllable {
     //  genesis block for that token as this contains initial balance of
     //  this token
     if ((balances[_owner].length == 0) || (balances[_owner][0].fromBlock > _blockNumber)) {
-        if (address(parentToken) != 0) {
+        if (address(parentToken) != address(0)) {
             return parentToken.balanceOfAt(_owner, min(_blockNumber, parentSnapShotBlock));
         } else {
             // Has no parent
@@ -194,7 +194,7 @@ contract ProofToken is Controllable {
     ApproveAndCallReceiver(_spender).receiveApproval(
         msg.sender,
         _amount,
-        this,
+        address(this),
         _extraData
     );
 
@@ -228,7 +228,7 @@ contract ProofToken is Controllable {
 
     require(_amount > 0);
     require(parentSnapShotBlock < block.number);
-    require((_to != 0) && (_to != address(this)));
+    require((_to != address(0)) && (_to != address(this)));
 
     // If the amount being transfered is more than the balance of the
     // account the transfer returns false
@@ -266,7 +266,7 @@ contract ProofToken is Controllable {
 
     updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
     updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
-    emit Transfer(0, _owner, _amount);
+    emit Transfer(address(0), _owner, _amount);
     return true;
   }
 
@@ -289,7 +289,7 @@ contract ProofToken is Controllable {
 
     for (uint256 i = 0; i < _addresses.length; i++) {
       updateValueAtNow(balances[_addresses[i]], _balances[i]);
-      Transfer(0, _addresses[i], _balances[i]);
+      emit Transfer(address(0), _addresses[i], _balances[i]);
     }
 
     updateValueAtNow(totalSupplyHistory, TOTAL_PRESALE_TOKENS);
@@ -378,7 +378,7 @@ contract ProofToken is Controllable {
   }
 
 
-  function min(uint256 a, uint256 b) internal view returns (uint) {
+  function min(uint256 a, uint256 b) internal pure returns (uint) {
       return a < b ? a : b;
   }
 
@@ -400,7 +400,7 @@ contract ProofToken is Controllable {
       }
 
       ProofToken cloneToken = tokenFactory.createCloneToken(
-          this,
+          address(this),
           _snapshotBlock,
           _name,
           _symbol

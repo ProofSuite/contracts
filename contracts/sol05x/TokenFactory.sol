@@ -8,12 +8,12 @@ contract TokenFactory {
     function createCloneToken(
         address _parentToken,
         uint _snapshotBlock,
-        string _tokenName,
-        string _tokenSymbol
+        string memory _tokenName,
+        string memory _tokenSymbol
         ) public returns (ProofToken) {
 
         ProofToken newToken = new ProofToken(
-            this,
+            address(this),
             _parentToken,
             _snapshotBlock,
             _tokenName,
