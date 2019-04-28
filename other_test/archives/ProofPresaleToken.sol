@@ -21,7 +21,7 @@ contract ProofPresaleToken is ERC20, Controllable {
   mapping(address => uint) balances;
   mapping (address => mapping (address => uint)) allowed;
 
-  string public constant name = "Proof Presale Token";
+  string public constant name = "WIRA Presale Token";
   string public constant symbol = "PPT";
   uint8 public constant decimals = 18;
   bool public mintingFinished = false;

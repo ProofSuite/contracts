@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.5.0;
 
 
 /**
@@ -13,7 +13,7 @@ contract Controllable {
   /**
    * @dev The Ownable constructor sets the original `owner` of the contract to the sender account.
    */
-  function Controllable() public {
+  constructor() public {
     controller = msg.sender;
   }
 

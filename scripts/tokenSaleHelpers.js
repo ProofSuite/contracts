@@ -34,7 +34,7 @@ const getContributors = async (tokenSale) => {
  * @returns token {String}
  */
 const getToken = async (tokenSale) => {
-  let token = await tokenSale.proofToken.call()
+  let token = await tokenSale.Token.call()
   return token
 }
 

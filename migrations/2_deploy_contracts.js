@@ -1,6 +1,6 @@
 const config = require('../config.js')
 
-const ProofToken = artifacts.require('./ProofToken.sol');
+const Token = artifacts.require('./Token.sol');
 const TokenSale = artifacts.require('./TokenSale.sol');
 const TokenFactory = artifacts.require('./TokenFactory.sol')
 
@@ -35,19 +35,19 @@ module.exports = function(deployer) {
       )
     .then(function() {
       return deployer.deploy(
-        ProofToken,
+        Token,
         TokenFactory.address,
         "0x0000000000000000000000000000000000000000",
         0,
-        "Proof",
-        "PRFT",
+        "WIRA",
+        "WIRA",
         {gas: gas, gasPrice: gasPrice }
       )
     })
     .then(function() {
       return deployer.deploy(
         TokenSale,
-        ProofToken.address,
+        Token.address,
         1509541200,   // November 1st 1PM GMT: 1509541200
         1512133200,   // December 1st 1PM GMT: 1512133200
         {gas: gas, gasPrice: gasPrice }

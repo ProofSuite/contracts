@@ -1,6 +1,6 @@
-pragma solidity ^0.5.7;
+pragma solidity ^0.4.15;
 
-import './ProofToken.sol';
+import './Token.sol';
 import './Ownable.sol';
 
 contract TokenFactory {
@@ -8,12 +8,12 @@ contract TokenFactory {
     function createCloneToken(
         address _parentToken,
         uint _snapshotBlock,
-        string memory _tokenName,
-        string memory _tokenSymbol
-        ) public returns (ProofToken) {
+        string _tokenName,
+        string _tokenSymbol
+        ) public returns (Token) {
 
-        ProofToken newToken = new ProofToken(
-            address(this),
+        Token newToken = new Token(
+            this,
             _parentToken,
             _snapshotBlock,
             _tokenName,

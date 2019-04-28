@@ -15,16 +15,16 @@ const should = chai.should()
 const expect = chai.expect
 
 const ProofPresaleToken = artifacts.require('./ProofPresaleToken.sol')
-const ProofToken = artifacts.require('./ProofToken.sol')
+const Token = artifacts.require('./Token.sol')
 const TokenSale = artifacts.require('./TokenSale.sol')
 
 contract('Crowdsale', (accounts) => {
   let fund = accounts[0]
   let tokenSale
-  let proofToken
+  let Token
   let proofPresaleToken
   let proofPresaleTokenAddress
-  let proofTokenAddress
+  let TokenAddress
   let receiver = accounts[2]
   let hacker1 = accounts[3]
   let hacker2 = accounts[4]
@@ -42,20 +42,20 @@ contract('Crowdsale', (accounts) => {
     proofPresaleToken = await ProofPresaleToken.new()
     proofPresaleTokenAddress = await getAddress(proofPresaleToken)
 
-    proofToken = await ProofToken.new(proofPresaleTokenAddress, proofWalletAddress)
-    proofTokenAddress = await getAddress(proofToken)
+    Token = await Token.new(proofPresaleTokenAddress, proofWalletAddress)
+    TokenAddress = await getAddress(Token)
 
-    proofToken = await ProofToken.new(
+    Token = await Token.new(
       '0x0',
       '0x0',
       0,
-      'Proof Token',
+      'WIRA Token',
       18,
-      'PRFT',
+      'WIRA',
       true)
 
     tokenSale = await TokenSale.new(
-      proofTokenAddress,
+      TokenAddress,
       startBlock,
       endBlock)
   })

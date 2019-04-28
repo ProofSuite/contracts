@@ -50,17 +50,17 @@ const assert = chai.assert
 const should = chai.should()
 const expect = chai.expect
 
-const ProofToken = artifacts.require('./ProofToken.sol')
+const Token = artifacts.require('./Token.sol')
 const TokenSale = artifacts.require('./TokenSale.sol')
 const TokenFactory = artifacts.require('./TokenFactory.sol')
 
-contract('cloneProofToken', ([fund, buyer, buyer2, wallet]) => {
+contract('cloneToken', ([fund, buyer, buyer2, wallet]) => {
   let tokenSale
-  let proofToken
-  let proofTokenFactory
-  let proofTokenFactoryAddress
+  let Token
+  let TokenFactory
+  let TokenFactoryAddress
 
-  let proofTokenAddress
+  let TokenAddress
   let tokenSaleAddress
   let startTime
   let endTime
@@ -73,32 +73,32 @@ contract('cloneProofToken', ([fund, buyer, buyer2, wallet]) => {
 
   beforeEach(async function() {
 
-    proofTokenFactory = await TokenFactory.new()
-    proofTokenFactoryAddress = await getAddress(proofTokenFactory)
+    TokenFactory = await TokenFactory.new()
+    TokenFactoryAddress = await getAddress(TokenFactory)
 
-    proofToken = await ProofToken.new(
-      proofTokenFactoryAddress,
+    Token = await Token.new(
+      TokenFactoryAddress,
       '0x0',
       0,
-      'Proof Token',
-      'PRFT'
+      'WIRA Token',
+      'WIRA'
     )
 
-    proofTokenAddress = await getAddress(proofToken)
+    TokenAddress = await getAddress(Token)
 
     contractUploadTime = latestTime()
     startTime = contractUploadTime.add(1, 'day').unix()
     endTime = contractUploadTime.add(1, 'day').unix()
 
     tokenSale = await TokenSale.new(
-      proofTokenAddress,
+      TokenAddress,
       startTime,
       endTime
     )
 
     tokenSaleAddress = await getAddress(tokenSale)
 
-    await transferControl(proofToken, fund, tokenSaleAddress)
+    await transferControl(Token, fund, tokenSaleAddress)
     await increaseTime(moment.duration(1.01, 'day'))
   })
 
@@ -106,17 +106,17 @@ contract('cloneProofToken', ([fund, buyer, buyer2, wallet]) => {
     beforeEach(async function() {
 
       let config = {
-        name: 'Proof Token',
-        symbol: 'PRFT2',
+        name: 'WIRA Token',
+        symbol: 'WIRA2',
         block: 0
       }
 
       await buyTokens(tokenSale, buyer, 1 * ether)
 
-      txnReceipt = await cloneToken(proofToken, fund, config)
+      txnReceipt = await cloneToken(Token, fund, config)
       topics = getTxnReceiptTopics(txnReceipt)
       clonedTokenAddress = decodeEthereumAddress(topics[0].parameters[0])
-      clonedToken = await ProofToken.at(clonedTokenAddress)
+      clonedToken = await Token.at(clonedTokenAddress)
     })
 
     it('token should be cloneable', async function () {
@@ -125,13 +125,13 @@ contract('cloneProofToken', ([fund, buyer, buyer2, wallet]) => {
     })
 
     it('cloned token should return identical balances', async function() {
-      let balance = await getTokenBalance(proofToken, buyer)
+      let balance = await getTokenBalance(Token, buyer)
       let clonedBalance = await getTokenBalance(clonedToken, buyer)
       clonedBalance.should.be.equal(balance)
     })
 
     it('should return identical total supply', async function() {
-      let totalSupply = await getTotalSupply(proofToken)
+      let totalSupply = await getTotalSupply(Token)
       let clonedTotalSupply = await getTotalSupply(clonedToken)
       clonedTotalSupply.should.be.equal(totalSupply)
     })

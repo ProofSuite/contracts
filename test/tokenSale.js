@@ -18,17 +18,17 @@ const should = chai.should()
 const expect = chai.expect
 
 const ProofPresaleToken = artifacts.require('./ProofPresaleToken.sol')
-const ProofToken = artifacts.require('./ProofToken.sol')
+const Token = artifacts.require('./Token.sol')
 const TokenSale = artifacts.require('./TokenSale.sol')
 
 contract('Crowdsale', (accounts) => {
   let fund = accounts[0]
   let tokenSale
   let tokenSaleAddress
-  let proofToken
+  let Token
   let proofPresaleToken
   let proofPresaleTokenAddress
-  let proofTokenAddress
+  let TokenAddress
   let sender = accounts[1]
   let receiver = accounts[2]
   let hacker = accounts[3]
@@ -45,22 +45,22 @@ contract('Crowdsale', (accounts) => {
     proofPresaleToken = await ProofPresaleToken.new()
     proofPresaleTokenAddress = await getAddress(proofPresaleToken)
 
-    proofToken = await ProofToken.new(
+    Token = await Token.new(
       '0x0',
       '0x0',
       0,
-      'Proof Token Test',
-      'PRFT Test'
+      'WIRA Token Test',
+      'WIRA Test'
     )
 
-    proofTokenAddress = await getAddress(proofToken)
+    TokenAddress = await getAddress(Token)
 
     contractUploadTime = latestTime()
     startTime = contractUploadTime.add(1, 'day').unix()
     endTime = contractUploadTime.add(31, 'day').unix()
 
     tokenSale = await TokenSale.new(
-      proofTokenAddress,
+      TokenAddress,
       startTime,
       endTime)
 
@@ -69,7 +69,7 @@ contract('Crowdsale', (accounts) => {
 
   describe('Token Information', async function() {
     beforeEach(async function() {
-      await transferControl(proofToken, fund, tokenSaleAddress)
+      await transferControl(Token, fund, tokenSaleAddress)
       await enableTransfers(tokenSale, fund)
       await increaseTime(moment.duration(1.1, 'day'))
     })
@@ -77,16 +77,16 @@ contract('Crowdsale', (accounts) => {
     it('should return the correct token supply', async function() {
       await buyTokens(tokenSale, sender, 1 * ether)
 
-      let supply = await getTotalSupply(proofToken)
+      let supply = await getTotalSupply(Token)
       let tokenSaleDisplaySupply = await getTotalSupply(tokenSale)
       supply.should.be.equal(tokenSaleDisplaySupply)
     })
 
     // the token balance of each token holder can also be displayed via the token sale contract - by routing towards the proof token balanceOf() method
     // we verify both balances are equal
-    it('should return the correct token balance (tokenSale.balanceOf must be equal to proofToken.balanceOf)', async function() {
+    it('should return the correct token balance (tokenSale.balanceOf must be equal to Token.balanceOf)', async function() {
       await buyTokens(tokenSale, sender, 1 * ether)
-      let senderBalance = await getTokenBalance(proofToken, sender)
+      let senderBalance = await getTokenBalance(Token, sender)
       let senderDisplayBalance = await getTokenBalance(tokenSale, sender)
       senderBalance.should.be.equal(senderDisplayBalance)
     })
@@ -94,7 +94,7 @@ contract('Crowdsale', (accounts) => {
 
   describe('Initial State', function () {
     beforeEach(async function() {
-      await transferControl(proofToken, fund, tokenSaleAddress)
+      await transferControl(Token, fund, tokenSaleAddress)
       await increaseTime(moment.duration(1.01, 'day'))
     })
 
@@ -103,9 +103,9 @@ contract('Crowdsale', (accounts) => {
       tokenSaleWallet.should.be.equal('0x99892ac6da1b3851167cb959fe945926bca89f09')
     })
 
-    it('should initially be linked to the Proof token', async function() {
-      let tokenSaleToken = await tokenSale.proofToken.call()
-      tokenSaleToken.should.be.equal(proofTokenAddress)
+    it('should initially be linked to the WIRA token', async function() {
+      let tokenSaleToken = await tokenSale.Token.call()
+      tokenSaleToken.should.be.equal(TokenAddress)
     })
 
     it('Initial Price should be equal to 0.0748 ether', async function() {
@@ -133,23 +133,23 @@ contract('Crowdsale', (accounts) => {
       proofPresaleToken = await ProofPresaleToken.new()
       proofPresaleTokenAddress = await getAddress(proofPresaleToken)
 
-      proofToken = await ProofToken.new(
+      Token = await Token.new(
         '0x0',
         '0x0',
         0,
-        'Proof Token Test',
-        'PRFT Test'
+        'WIRA Token Test',
+        'WIRA Test'
       )
 
-      proofTokenAddress = await getAddress(proofToken)
+      TokenAddress = await getAddress(Token)
 
       tokenSale = await TokenSale.new(
-        proofTokenAddress,
+        TokenAddress,
         startTime,
         endTime)
 
       tokenSaleAddress = await getAddress(tokenSale)
-      transferControl(proofToken, fund, tokenSaleAddress)
+      transferControl(Token, fund, tokenSaleAddress)
     })
 
     it('should initially not be finalized', async function() {

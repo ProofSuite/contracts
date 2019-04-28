@@ -1,18 +1,15 @@
-pragma solidity ^0.5.7;
+pragma solidity ^0.5.0;
 
 import './SafeMath.sol';
 import './ERC20.sol';
 import './Controllable.sol';
 
 /**
- * @title ProofPresaleToken (PROOFP)
+ * @title PresaleToken (PROOFP)
  * Standard Mintable ERC20 Token
- * https://github.com/ethereum/EIPs/issues/20
- * Based on code by FirstBlood:
- * https://github.com/Firstbloodio/token/blob/master/smart_contract/FirstBloodToken.sol
  */
 
-contract ProofPresaleToken is ERC20, Controllable {
+contract PresaleToken is ERC20, Controllable {
 
   using SafeMath for uint256;
 
@@ -21,8 +18,8 @@ contract ProofPresaleToken is ERC20, Controllable {
   mapping(address => uint) balances;
   mapping (address => mapping (address => uint)) allowed;
 
-  string public constant name = "Proof Presale Token";
-  string public constant symbol = "PPT";
+  string public constant name = "WIRA Presale Token";
+  string public constant symbol = "WIRA";
   uint8 public constant decimals = 18;
   bool public mintingFinished = false;
 
@@ -49,7 +46,7 @@ contract ProofPresaleToken is ERC20, Controllable {
   }
 
   function transferFrom(address _from, address _to, uint _value) public returns (bool) {
-    var _allowance = allowed[_from][msg.sender];
+    uint256 _allowance = allowed[_from][msg.sender];
 
     balances[_to] = balances[_to].add(_value);
     balances[_from] = balances[_from].sub(_value);
@@ -68,7 +65,6 @@ contract ProofPresaleToken is ERC20, Controllable {
   function allowance(address _owner, address _spender) public view returns (uint256) {
     return allowed[_owner][_spender];
   }
-
 
   modifier canMint() {
     require(!mintingFinished);

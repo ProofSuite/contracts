@@ -37,7 +37,7 @@ const should = chai.should()
 const expect = chai.expect
 
 const ProofPresaleToken = artifacts.require('./ProofPresaleToken.sol')
-const ProofToken = artifacts.require('./ProofToken.sol')
+const Token = artifacts.require('./Token.sol')
 const TokenSale = artifacts.require('./TokenSale.sol')
 
 contract('Crowdsale', (accounts) => {
@@ -45,10 +45,10 @@ contract('Crowdsale', (accounts) => {
   let fund = accounts[0]
   let tokenSale
   let tokenSaleAddress
-  let proofToken
+  let Token
   let proofPresaleToken
   let proofPresaleTokenAddress
-  let proofTokenAddress
+  let TokenAddress
   let sender = accounts[1]
   let receiver = accounts[2]
   let hacker1 = accounts[3]
@@ -65,13 +65,13 @@ contract('Crowdsale', (accounts) => {
     proofPresaleToken = await ProofPresaleToken.new()
     proofPresaleTokenAddress = await getAddress(proofPresaleToken)
 
-    proofToken = await ProofToken.new(proofPresaleTokenAddress)
-    proofTokenAddress = await getAddress(proofToken)
+    Token = await Token.new(proofPresaleTokenAddress)
+    TokenAddress = await getAddress(Token)
 
     tokenSale = await TokenSale.new(
                 wallet,
                 proofPresaleTokenAddress,
-                proofTokenAddress,
+                TokenAddress,
                 startBlock,
                 endBlock,
                 proofWalletAddress)
@@ -87,7 +87,7 @@ contract('Crowdsale', (accounts) => {
 
   describe('Initial State', function () {
     beforeEach(async function() {
-      transferOwnership(proofToken, fund, tokenSaleAddress)
+      transferOwnership(Token, fund, tokenSaleAddress)
     })
 
     it('should initially set the wallet', async function() {
@@ -95,12 +95,12 @@ contract('Crowdsale', (accounts) => {
       tokenSaleWallet.should.be.equal(wallet)
     })
 
-    it('should initially be linked to the Proof token', async function() {
-      let tokenSaleToken = await tokenSale.proofToken.call()
-      tokenSaleToken.should.be.equal(proofTokenAddress)
+    it('should initially be linked to the WIRA token', async function() {
+      let tokenSaleToken = await tokenSale.Token.call()
+      tokenSaleToken.should.be.equal(TokenAddress)
     })
 
-    it('should initially be linked to the Proof Presale token', async function() {
+    it('should initially be linked to the WIRA Presale token', async function() {
       let tokenSalePresaleToken = await tokenSale.proofPresaleToken.call()
       tokenSalePresaleToken.should.be.equal(proofPresaleTokenAddress)
     })
@@ -134,7 +134,7 @@ contract('Crowdsale', (accounts) => {
 
   describe('End and Beginning of Presale', async function() {
     beforeEach(async function() {
-      await transferOwnership(proofToken, fund, tokenSaleAddress)
+      await transferOwnership(Token, fund, tokenSaleAddress)
     })
 
     it('should reject payments before start', async function() {
@@ -157,7 +157,7 @@ contract('Crowdsale', (accounts) => {
 
   describe('Crowdsale', async function() {
     beforeEach(async function() {
-      await transferOwnership(proofToken, fund, tokenSaleAddress)
+      await transferOwnership(Token, fund, tokenSaleAddress)
       await advanceToBlock(startBlock)
     })
 
@@ -184,29 +184,29 @@ contract('Crowdsale', (accounts) => {
     })
 
     it('should increase total token supply', async function() {
-      let initialTotalSupply = await getTotalSupply(proofToken)
+      let initialTotalSupply = await getTotalSupply(Token)
 
       await buyTokens(tokenSale, sender, 1 * ether)
 
       let expectedSupplyIncrease = await numberOfTokensFor(tokenSale, 1 * ether)
-      expectedSupplyIncrease = await baseUnits(proofToken, expectedSupplyIncrease)
+      expectedSupplyIncrease = await baseUnits(Token, expectedSupplyIncrease)
 
-      let totalSupply = await getTotalSupply(proofToken)
+      let totalSupply = await getTotalSupply(Token)
 
       let supplyIncrease = (totalSupply - initialTotalSupply)
-      supplyIncrease = await baseUnits(proofToken, supplyIncrease)
+      supplyIncrease = await baseUnits(Token, supplyIncrease)
 
       expect(supplyIncrease).to.almost.equal(expectedSupplyIncrease)
     })
 
     it('should increase total supply by 11.36 for 10 ether raised', async function() {
-      let initialTotalSupply = await getTotalSupply(proofToken)
+      let initialTotalSupply = await getTotalSupply(Token)
 
       await buyTokens(tokenSale, sender, 1 * ether)
 
-      let totalSupply = await getTotalSupply(proofToken)
+      let totalSupply = await getTotalSupply(Token)
       let supplyIncrease = (totalSupply - initialTotalSupply)
-      supplyIncrease = await baseUnits(proofToken, supplyIncrease)
+      supplyIncrease = await baseUnits(Token, supplyIncrease)
 
       expect(supplyIncrease).almost.equal(11.363636363636)
     })
@@ -222,72 +222,72 @@ contract('Crowdsale', (accounts) => {
     })
 
     it('should create tokens for the sender', async function() {
-      let initialTokenBalance = await getTokenBalance(proofToken, sender)
+      let initialTokenBalance = await getTokenBalance(Token, sender)
 
       await buyTokens(tokenSale, sender, 1 * ether)
 
-      let tokenBalance = await getTokenBalance(proofToken, sender)
-      let balanceIncrease = await baseUnits(proofToken, tokenBalance - initialTokenBalance)
+      let tokenBalance = await getTokenBalance(Token, sender)
+      let balanceIncrease = await baseUnits(Token, tokenBalance - initialTokenBalance)
 
       let expectedBalanceIncrease = await numberOfTokensFor(tokenSale, 1 * ether)
-      expectedBalanceIncrease = await baseUnits(proofToken, expectedBalanceIncrease)
+      expectedBalanceIncrease = await baseUnits(Token, expectedBalanceIncrease)
 
       expect(balanceIncrease).to.almost.equal(expectedBalanceIncrease)
     })
 
     it('should increase buyer balance by X for 10 ether invested', async function() {
-      let initialTokenBalance = await getTokenBalance(proofToken, sender)
+      let initialTokenBalance = await getTokenBalance(Token, sender)
 
       await buyTokens(tokenSale, sender, 1 * ether)
 
-      let tokenBalance = await getTokenBalance(proofToken, sender)
+      let tokenBalance = await getTokenBalance(Token, sender)
       let balanceIncrease = (tokenBalance - initialTokenBalance)
-      balanceIncrease = await baseUnits(proofToken, balanceIncrease)
+      balanceIncrease = await baseUnits(Token, balanceIncrease)
       expect(balanceIncrease).almost.equal(11.363636363636)
     })
   })
 
   describe('Buying Tokens', async function() {
     beforeEach(async function() {
-      await transferOwnership(proofToken, fund, tokenSaleAddress)
+      await transferOwnership(Token, fund, tokenSaleAddress)
       await advanceToBlock(startBlock)
     })
 
     it('should not be allowed if the contract is paused', async function() {
       await pause(tokenSale, fund)
-      let initialBalance = await getTokenBalance(proofToken, sender)
+      let initialBalance = await getTokenBalance(Token, sender)
 
       let params = { from: sender, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
       await expectInvalidOpcode(tokenSale.buyTokens(1, params))
 
-      let balance = await getTokenBalance(proofToken, sender)
+      let balance = await getTokenBalance(Token, sender)
       balance.should.be.equal(initialBalance)
     })
 
     it('should be allowed if the contract is paused and unpaused', async function() {
-      let initialBalance = await getTokenBalance(proofToken, sender)
+      let initialBalance = await getTokenBalance(Token, sender)
 
       await buyTokens(tokenSale, sender, 1 * ether)
       await pause(tokenSale, fund)
       await unpause(tokenSale, fund)
       await buyTokens(tokenSale, sender, 1 * ether)
 
-      let balance = await getTokenBalance(proofToken, sender)
-      let balanceIncrease = await baseUnits(proofToken, balance - initialBalance)
+      let balance = await getTokenBalance(Token, sender)
+      let balanceIncrease = await baseUnits(Token, balance - initialBalance)
       expect(balanceIncrease).to.almost.equal(22.7272727272)
     })
 
     it('should not throw if purchase hits just below the cap', async function() {
       let cap = await getCap(tokenSale)
       let priceInWei = await getPriceInWei(tokenSale)
-      let initialBalance = await getTokenBalance(proofToken, sender)
+      let initialBalance = await getTokenBalance(Token, sender)
 
       let amount = cap * priceInWei - 1
       let expectedTokens = await numberOfTokensFor(tokenSale, amount)
 
       await buyTokens(tokenSale, sender, amount)
 
-      let balance = await getTokenBalance(proofToken, sender)
+      let balance = await getTokenBalance(Token, sender)
       let balanceIncrease = balance - initialBalance
 
       expect(balanceIncrease).almost.equal(expectedTokens, 3)
@@ -296,13 +296,13 @@ contract('Crowdsale', (accounts) => {
     it('should throw if the number of tokens exceeds the cap', async function() {
       let cap = await getCap(tokenSale)
       let priceInWei = await getPriceInWei(tokenSale)
-      let initialBalance = await getTokenBalance(proofToken, sender)
+      let initialBalance = await getTokenBalance(Token, sender)
 
       let amount = cap * priceInWei * (1.001)
       let params = { value: amount, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
       await expectInvalidOpcode(tokenSale.buyTokens(sender, params))
 
-      let balance = await getTokenBalance(proofToken, sender)
+      let balance = await getTokenBalance(Token, sender)
       balance.should.be.equal(initialBalance)
     })
   })

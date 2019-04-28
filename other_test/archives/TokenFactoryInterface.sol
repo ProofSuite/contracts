@@ -1,13 +1,13 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.4.15;
 
 import './Token.sol';
 
 contract TokenFactoryInterface {
 
-    function createCloneToken (
+    function createCloneToken(
         address _parentToken,
         uint _snapshotBlock,
-        string memory _tokenName,
-        string memory _tokenSymbol
+        string _tokenName,
+        string _tokenSymbol
       ) public returns (Token newToken);
 }

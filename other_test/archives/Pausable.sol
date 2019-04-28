@@ -1,4 +1,4 @@
-pragma solidity ^0.5.7;
+pragma solidity ^0.4.15;
 
 
 import "./Ownable.sol";
@@ -14,7 +14,7 @@ contract Pausable is Ownable {
 
   bool public paused = false;
 
-  constructor() public {}
+  function Pausable() public {}
 
   /**
    * @dev modifier to allow actions only when the contract IS paused
@@ -37,7 +37,7 @@ contract Pausable is Ownable {
    */
   function pause() public onlyOwner whenNotPaused returns (bool) {
     paused = true;
-    emit Pause();
+    Pause();
     return true;
   }
 
@@ -46,7 +46,7 @@ contract Pausable is Ownable {
    */
   function unpause() public onlyOwner whenPaused returns (bool) {
     paused = false;
-    emit Unpause();
+    Unpause();
     return true;
   }
 }

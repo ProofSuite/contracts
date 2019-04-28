@@ -1,12 +1,12 @@
-# Proof Token Sale Smart Contracts
+# WIRA Token Sale Smart Contracts
 Public Repository for the proof token sale smart contracts
 
 
 
 ## Contracts
-The ProofToken and TokenSale contracts are inspired by open-zeppelin standard and audited contracts.
+The Token and TokenSale contracts are inspired by open-zeppelin standard and audited contracts.
 
-The Proof Tokens are based on the `StandardToken` and `MintableToken` ERC20 contracts. Additional functionality is heavily inspired by the `MinimeToken` (https://github.com/Giveth/minime/blob/master/contracts/MiniMeToken.sol)
+The WIRA Tokens are based on the `StandardToken` and `MintableToken` ERC20 contracts. Additional functionality is heavily inspired by the `MinimeToken` (https://github.com/Giveth/minime/blob/master/contracts/MiniMeToken.sol)
 
 The TokenSale contract is inspired by the open-zeppelin `Crowdsale` contract with additional functionality mixed in.
 
@@ -17,7 +17,7 @@ The TokenSale contract is inspired by the open-zeppelin `Crowdsale` contract wit
 ## How to use the tokensale contract
 The following contracts are hosted on this repository.
 - The tokensale contract
-- The Proof token contract
+- The WIRA token contract
 - The token factory contract
 - Several other interface contracts
 
@@ -34,12 +34,12 @@ on the console.
 You can use the 'scripts/importBalances.js' along with the provided csv file describing the presale balances.
 This import mechanism differs from the traditional way of importing presale balances via a claim function and makes the process
 automatic for presale buyers. The counterpart is that this requires more trust in the ICO team.
-Only the controller of the Proof token contract can call this function
+Only the controller of the WIRA token contract can call this function
 #### 3. Lock the presale balances
 Calling the `lockPresaleBalances` function ensures that no other presale balances can be imported.
-Only the controller of the Proof token contract can call this function
-#### 4. Transfer the Proof Token control to the Tokensale contract
-Proof tokens can only be created by the controller contract. The control of the proof Token can be given
+Only the controller of the WIRA token contract can call this function
+#### 4. Transfer the WIRA Token control to the Tokensale contract
+WIRA tokens can only be created by the controller contract. The control of the proof Token can be given
 from the contract creator to the tokensale by calling the `changeControl` function.
 #### 5. Transfer the ownership of the Tokensale contract to a custom wallet
 It is better not to use the wallet that created the contract and transfer ownership to a wallet shared by several members of the team
@@ -61,7 +61,7 @@ The cap is the maximum number of tokens that can be issued
 
 - The token sale will start on the date indicated by the `startTime` variable. Alternatively, it is possible to force the starting of the token sale by calling the `forceStart` method. Only the tokensale controller can call this method.
 
-- By default the Proof tokens are not transferable at the start of the tokensale. The controller of the tokensale can call the `enableTransfers` and `lockTransfers` methods to make token transferables. After the endTime, anybody can make the tokens definitely transferables by calling the `enableTransfers` method. The `lockTransfers` method will fail after the end of the token sale.
+- By default the WIRA tokens are not transferable at the start of the tokensale. The controller of the tokensale can call the `enableTransfers` and `lockTransfers` methods to make token transferables. After the endTime, anybody can make the tokens definitely transferables by calling the `enableTransfers` method. The `lockTransfers` method will fail after the end of the token sale.
 
 - The token master wallet can be used to send tokens to certain addresses (ex: exchanges) without making transfers available to anyone before the end of the presale. The token sale controller can call the `enableMasterTransfers` and `lockMasterTransfers` to activate/deactivate this option.
 
@@ -84,9 +84,9 @@ The token sale can be finalized in different ways.
 Step-by-step instructions to finalize the token sale:
 
 1. Pause the token sale with the `pause` function
-2. Allocate Proof Tokens with the `allocateProofTokens` function - step 1 needs to be completed
+2. Allocate WIRA Tokens with the `allocateTokens` function - step 1 needs to be completed
 2. Finalize the token sale with the `finalize` function - step 1 and 2 need to be completed
-3. Optionally, transfer the control of the Proof token to another smart-contract
+3. Optionally, transfer the control of the WIRA token to another smart-contract
 
 
 ### Development and Testing Environment Setup

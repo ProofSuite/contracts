@@ -1,14 +1,12 @@
-pragma solidity ^0.5.7;
+pragma solidity ^0.5.0;
 
 /**
- * @title ProofPresaleToken (PROOFP)
+ * @title PresaleToken
  * Standard Mintable ERC20 Token
  * https://github.com/ethereum/EIPs/issues/20
- * Based on code by FirstBlood:
- * https://github.com/Firstbloodio/token/blob/master/smart_contract/FirstBloodToken.sol
  */
 
-contract ProofPresaleTokenInterface {
+contract PresaleTokenInterface {
 
   uint256 public totalSupply;
 

@@ -5,7 +5,7 @@ module.exports = async function (callback) {
       require('./jsHelpers.js')
 
       const Web3 = require('web3')
-      const ProofToken = artifacts.require('./ProofToken.sol')
+      const Token = artifacts.require('./Token.sol')
       const TokenSale = artifacts.require('./TokenSale.sol')
       const provider = artifacts.options.provider
       const web3 = new Web3(provider)

@@ -8,17 +8,17 @@ module.exports = async function (callback) {
     const provider = artifacts.options.provider
     const web3 = new Web3(provider)
 
-    const ProofToken = artifacts.require('./ProofToken.sol')
+    const Token = artifacts.require('./Token.sol')
     const TokenSale = artifacts.require('./TokenSale.sol')
 
-    const proofToken = await ProofToken.deployed()
-    const proofTokenSale = await TokenSale.deployed()
+    const Token = await Token.deployed()
+    const TokenSale = await TokenSale.deployed()
 
-    console.log(proofToken.address)
-    console.log(proofTokenSale.address)
+    console.log(Token.address)
+    console.log(TokenSale.address)
 
-    let tokenEvents = proofToken.allEvents()
-    let tokenSaleEvents = proofTokenSale.allEvents()
+    let tokenEvents = Token.allEvents()
+    let tokenSaleEvents = TokenSale.allEvents()
 
     tokenEvents.watch((err,res) => {
       console.log("\n****************\n")

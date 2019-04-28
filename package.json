@@ -58,6 +58,7 @@
     "ethereumjs-testrpc": "~4.1.3",
     "json2csv": "~3.11.1",
     "moment": "~2.19.1",
-    "solc": "~0.4.17"
+    "solc": "~0.4.17",
+    "truffle-hdwallet-provider": "^1.0.8"
   }
 }

@@ -17,17 +17,17 @@ const should = chai.should()
 const expect = chai.expect
 
 const ProofPresaleToken = artifacts.require('./ProofPresaleToken.sol')
-const ProofToken = artifacts.require('./ProofToken.sol')
+const Token = artifacts.require('./Token.sol')
 const TokenSale = artifacts.require('./TokenSale.sol')
 
 contract('Crowdsale', (accounts) => {
   let fund = accounts[0]
   let tokenSale
   let tokenSaleAddress
-  let proofToken
+  let Token
   let proofPresaleToken
   let proofPresaleTokenAddress
-  let proofTokenAddress
+  let TokenAddress
   let sender = accounts[1]
   let proofWalletAddress = accounts[9]
 
@@ -42,15 +42,15 @@ contract('Crowdsale', (accounts) => {
     proofPresaleToken = await ProofPresaleToken.new()
     proofPresaleTokenAddress = await getAddress(proofPresaleToken)
 
-    proofToken = await ProofToken.new(
+    Token = await Token.new(
       '0x0',
       '0x0',
       0,
-      'Proof Token Test',
-      'PRFT Test'
+      'WIRA Token Test',
+      'WIRA Test'
     )
 
-    proofTokenAddress = await getAddress(proofToken)
+    TokenAddress = await getAddress(Token)
 
     contractUploadTime = latestTime()
     startTime = contractUploadTime.add(1, 'day').unix()
@@ -58,7 +58,7 @@ contract('Crowdsale', (accounts) => {
 
 
     tokenSale = await TokenSale.new(
-      proofTokenAddress,
+      TokenAddress,
       startTime,
       endTime)
 
@@ -73,7 +73,7 @@ contract('Crowdsale', (accounts) => {
   describe('Initial State', function () {
 
     beforeEach(async function() {
-      transferControl(proofToken, fund, tokenSaleAddress)
+      transferControl(Token, fund, tokenSaleAddress)
     })
 
     it('should initially set the multisig', async function() {
@@ -81,9 +81,9 @@ contract('Crowdsale', (accounts) => {
       multisig.should.be.equal(proofMultiSig)
     })
 
-    it('should initially be linked to the Proof token', async function() {
-      let token = await tokenSale.proofToken.call()
-      token.should.be.equal(proofTokenAddress)
+    it('should initially be linked to the WIRA token', async function() {
+      let token = await tokenSale.Token.call()
+      token.should.be.equal(TokenAddress)
     })
 
     it('Token base price should be equal to 0.0748 ether', async function() {

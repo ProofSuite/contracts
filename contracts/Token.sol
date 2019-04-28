@@ -1,17 +1,16 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.5.0;
 
 import './SafeMath.sol';
 import './Controllable.sol';
-import './ApproveAndCallReceiver.sol';
 import './ControllerInterface.sol';
 import './TokenFactoryInterface.sol';
-import './ProofTokenInterface.sol';
+import './TokenInterface.sol';
 
 
-contract ProofToken is Controllable {
+contract Token is Controllable {
 
   using SafeMath for uint256;
-  ProofTokenInterface public parentToken;
+  TokenInterface public parentToken;
   TokenFactoryInterface public tokenFactory;
 
   string public name;
@@ -26,7 +25,6 @@ contract ProofToken is Controllable {
   bool public masterTransfersEnabled;
   address public masterWallet = 0xD8271285C255Ce31b9b25E46ac63619322Af5934;
 
-
   struct Checkpoint {
     uint128 fromBlock;
     uint128 value;
@@ -39,27 +37,26 @@ contract ProofToken is Controllable {
   bool public mintingFinished = false;
   bool public presaleBalancesLocked = false;
 
-  uint256 public constant TOTAL_PRESALE_TOKENS = 112386712924725508802400;
+  uint256 public TOTAL_PRESALE_TOKENS = 112386712924725508802400;
 
   event Mint(address indexed to, uint256 amount);
   event MintFinished();
   event ClaimedTokens(address indexed _token, address indexed _owner, uint _amount);
-  event NewCloneToken(address indexed cloneToken);
   event Approval(address indexed _owner, address indexed _spender, uint256 _amount);
   event Transfer(address indexed from, address indexed to, uint256 value);
 
 
 
 
-  function ProofToken(
+  constructor(
     address _tokenFactory,
     address _parentToken,
     uint256 _parentSnapShotBlock,
-    string _tokenName,
-    string _tokenSymbol
+    string memory _tokenName,
+    string memory _tokenSymbol
     ) public {
       tokenFactory = TokenFactoryInterface(_tokenFactory);
-      parentToken = ProofTokenInterface(_parentToken);
+      parentToken = TokenInterface(_parentToken);
       parentSnapShotBlock = _parentSnapShotBlock;
       name = _tokenName;
       symbol = _tokenSymbol;
@@ -70,32 +67,32 @@ contract ProofToken is Controllable {
       version = '0.1';
   }
 
-  function() public payable {
+  function() external payable {
     revert();
   }
 
 
   /**
-  * Returns the total Proof token supply at the current block
+  * Returns the total token supply at the current block
   * @return total supply {uint256}
   */
-  function totalSupply() public constant returns (uint256) {
+  function totalSupply() public view returns (uint256) {
     return totalSupplyAt(block.number);
   }
 
   /**
-  * Returns the total Proof token supply at the given block number
+  * Returns the total token supply at the given block number
   * @param _blockNumber {uint256}
   * @return total supply {uint256}
   */
-  function totalSupplyAt(uint256 _blockNumber) public constant returns(uint256) {
+  function totalSupplyAt(uint256 _blockNumber) public view returns(uint256) {
     // These next few lines are used when the totalSupply of the token is
     //  requested before a check point was ever created for this token, it
     //  requires that the `parentToken.totalSupplyAt` be queried at the
     //  genesis block for this token as that contains totalSupply of this
     //  token at this block number.
     if ((totalSupplyHistory.length == 0) || (totalSupplyHistory[0].fromBlock > _blockNumber)) {
-        if (address(parentToken) != 0) {
+        if (address(parentToken) != address(0)) {
             return parentToken.totalSupplyAt(min(_blockNumber, parentSnapShotBlock));
         } else {
             return 0;
@@ -112,7 +109,7 @@ contract ProofToken is Controllable {
   * @param _owner {address}
   * @return balance {uint256}
    */
-  function balanceOf(address _owner) public constant returns (uint256 balance) {
+  function balanceOf(address _owner) public view returns (uint256 balance) {
     return balanceOfAt(_owner, block.number);
   }
 
@@ -122,14 +119,14 @@ contract ProofToken is Controllable {
   * @param _blockNumber {uint256}
   * @return balance {uint256}
   */
-  function balanceOfAt(address _owner, uint256 _blockNumber) public constant returns (uint256) {
+  function balanceOfAt(address _owner, uint256 _blockNumber) public view returns (uint256) {
     // These next few lines are used when the balance of the token is
     //  requested before a check point was ever created for this token, it
     //  requires that the `parentToken.balanceOfAt` be queried at the
     //  genesis block for that token as this contains initial balance of
     //  this token
     if ((balances[_owner].length == 0) || (balances[_owner][0].fromBlock > _blockNumber)) {
-        if (address(parentToken) != 0) {
+        if (address(parentToken) != address(0)) {
             return parentToken.balanceOfAt(_owner, min(_blockNumber, parentSnapShotBlock));
         } else {
             // Has no parent
@@ -178,26 +175,7 @@ contract ProofToken is Controllable {
     require((_amount == 0) || (allowed[msg.sender][_spender] == 0));
 
     allowed[msg.sender][_spender] = _amount;
-    Approval(msg.sender, _spender, _amount);
-    return true;
-  }
-
-  /**
-  * Standard ERC20 approve function
-  * @param _spender {address}
-  * @param _amount {uint256}
-  * @return success {bool}
-  */
-  function approveAndCall(address _spender, uint256 _amount, bytes _extraData) public returns (bool success) {
-    approve(_spender, _amount);
-
-    ApproveAndCallReceiver(_spender).receiveApproval(
-        msg.sender,
-        _amount,
-        this,
-        _extraData
-    );
-
+    emit Approval(msg.sender, _spender, _amount);
     return true;
   }
 
@@ -207,7 +185,7 @@ contract ProofToken is Controllable {
   * @param _spender {address}
   * @return remaining {uint256}
    */
-  function allowance(address _owner, address _spender) public constant returns (uint256 remaining) {
+  function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
     return allowed[_owner][_spender];
   }
 
@@ -228,7 +206,7 @@ contract ProofToken is Controllable {
 
     require(_amount > 0);
     require(parentSnapShotBlock < block.number);
-    require((_to != 0) && (_to != address(this)));
+    require((_to != address(0)) && (_to != address(this)));
 
     // If the amount being transfered is more than the balance of the
     // account the transfer returns false
@@ -246,7 +224,7 @@ contract ProofToken is Controllable {
     updateValueAtNow(balances[_to], previousBalanceTo + _amount);
 
     // An event to make the transfer easy to find on the blockchain
-    Transfer(_from, _to, _amount);
+    emit Transfer(_from, _to, _amount);
     return true;
   }
 
@@ -266,7 +244,7 @@ contract ProofToken is Controllable {
 
     updateValueAtNow(totalSupplyHistory, curTotalSupply + _amount);
     updateValueAtNow(balances[_owner], previousBalanceTo + _amount);
-    Transfer(0, _owner, _amount);
+    emit Transfer(address(0), _owner, _amount);
     return true;
   }
 
@@ -284,12 +262,12 @@ contract ProofToken is Controllable {
    * @param _balances {uint256[]} Array of balances corresponding to presale addresses.
    * @return success {bool}
    */
-  function importPresaleBalances(address[] _addresses, uint256[] _balances) public onlyController returns (bool) {
+  function importPresaleBalances(address[] memory _addresses, uint256[] memory _balances) public onlyController returns (bool) {
     require(presaleBalancesLocked == false);
 
     for (uint256 i = 0; i < _addresses.length; i++) {
       updateValueAtNow(balances[_addresses[i]], _balances[i]);
-      Transfer(0, _addresses[i], _balances[i]);
+      emit Transfer(address(0), _addresses[i], _balances[i]);
     }
 
     updateValueAtNow(totalSupplyHistory, TOTAL_PRESALE_TOKENS);
@@ -306,12 +284,12 @@ contract ProofToken is Controllable {
   }
 
   /**
-   * Lock the minting of Proof Tokens - to be called after the presale
+   * Lock the minting of Tokens - to be called after the presale
    * @return {bool} success
   */
   function finishMinting() public onlyController returns (bool) {
     mintingFinished = true;
-    MintFinished();
+    emit MintFinished();
     return true;
   }
 
@@ -336,7 +314,7 @@ contract ProofToken is Controllable {
    * @param _checkpoints {Checkpoint[]} List of checkpoints - supply history or balance history
    * @return value {uint256} Value of _checkpoints at _block
   */
-  function getValueAt(Checkpoint[] storage _checkpoints, uint256 _block) constant internal returns (uint256) {
+  function getValueAt(Checkpoint[] storage _checkpoints, uint256 _block) view internal returns (uint256) {
 
       if (_checkpoints.length == 0)
         return 0;
@@ -378,40 +356,6 @@ contract ProofToken is Controllable {
   }
 
 
-  function min(uint256 a, uint256 b) internal constant returns (uint) {
+  function min(uint256 a, uint256 b) internal pure returns (uint) {
       return a < b ? a : b;
   }
-
-  /**
-  * Clones Proof Token at the given snapshot block
-  * @param _snapshotBlock {uint256}
-  * @param _name {string} - The cloned token name
-  * @param _symbol {string} - The cloned token symbol
-  * @return clonedTokenAddress {address}
-   */
-  function createCloneToken(uint256 _snapshotBlock, string _name, string _symbol) public returns(address) {
-
-      if (_snapshotBlock == 0) {
-        _snapshotBlock = block.number;
-      }
-
-      if (_snapshotBlock > block.number) {
-        _snapshotBlock = block.number;
-      }
-
-      ProofToken cloneToken = tokenFactory.createCloneToken(
-          this,
-          _snapshotBlock,
-          _name,
-          _symbol
-        );
-
-
-      cloneToken.transferControl(msg.sender);
-
-      // An event to make the token easy to find on the blockchain
-      NewCloneToken(address(cloneToken));
-      return address(cloneToken);
-    }
-
-}

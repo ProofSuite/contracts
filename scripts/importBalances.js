@@ -14,11 +14,11 @@ module.exports = async function (callback) {
   const config = require('../config.js')
 
   const ProofPresaleToken = artifacts.require('./ProofPresaleToken.sol')
-  const ProofToken = artifacts.require('./ProofToken.sol')
+  const Token = artifacts.require('./Token.sol')
   const provider = artifacts.options.provider
   const web3 = new Web3(provider)
 
-  let proofToken
+  let Token
   let proofPresaleToken
   let fund
 
@@ -37,7 +37,7 @@ module.exports = async function (callback) {
   }
 
   const run = async function(){
-    proofToken = await ProofToken.deployed()
+    Token = await Token.deployed()
     await launchImport()
   }
 
@@ -63,7 +63,7 @@ module.exports = async function (callback) {
     for (let i = 0; i < addressListNumber; i = i + 50) {
       let addressesBatch = addresses.slice(i, i + 50)
       let balancesBatch = balances.slice(i, i + 50)
-      let receipt = await importBalances(proofToken, fund, addressesBatch, balancesBatch)
+      let receipt = await importBalances(Token, fund, addressesBatch, balancesBatch)
     }
   }
 

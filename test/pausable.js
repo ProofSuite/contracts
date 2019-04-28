@@ -51,17 +51,17 @@ const should = chai.should()
 const expect = chai.expect
 
 const ProofPresaleToken = artifacts.require('./ProofPresaleToken.sol')
-const ProofToken = artifacts.require('./ProofToken.sol')
+const Token = artifacts.require('./Token.sol')
 const TokenSale = artifacts.require('./TokenSale.sol')
 
 contract('Crowdsale', (accounts) => {
   let fund = accounts[0]
   let tokenSale
   let tokenSaleAddress
-  let proofToken
+  let Token
   let proofPresaleToken
   let proofPresaleTokenAddress
-  let proofTokenAddress
+  let TokenAddress
   let sender = accounts[1]
   let hacker1 = accounts[3]
   let wallet = accounts[5]
@@ -77,22 +77,22 @@ contract('Crowdsale', (accounts) => {
     proofPresaleToken = await ProofPresaleToken.new()
     proofPresaleTokenAddress = await getAddress(proofPresaleToken)
 
-    proofToken = await ProofToken.new(
+    Token = await Token.new(
       '0x0',
       '0x0',
       0,
-      'Proof Token Test',
-      'PRFT Test'
+      'WIRA Token Test',
+      'WIRA Test'
     )
 
-    proofTokenAddress = await getAddress(proofToken)
+    TokenAddress = await getAddress(Token)
 
     contractUploadTime = latestTime()
     startTime = contractUploadTime.add(1, 'day').unix()
     endTime = contractUploadTime.add(31, 'day').unix()
 
     tokenSale = await TokenSale.new(
-      proofTokenAddress,
+      TokenAddress,
       startTime,
       endTime
     )
@@ -110,7 +110,7 @@ contract('Crowdsale', (accounts) => {
     })
 
     beforeEach(async function() {
-      await transferControl(proofToken, fund, tokenSaleAddress)
+      await transferControl(Token, fund, tokenSaleAddress)
       await enableTransfers(tokenSale, fund)
       await increaseTime(moment.duration(1.01, 'day'))
     })
@@ -168,25 +168,25 @@ contract('Crowdsale', (accounts) => {
 
     it('buying tokens should not be possible if the contract is paused', async function() {
       await pause(tokenSale, fund)
-      let initialBalance = await getTokenBalance(proofToken, sender)
+      let initialBalance = await getTokenBalance(Token, sender)
 
       let params = { from: sender, gas: DEFAULT_GAS, gasPrice: DEFAULT_GAS_PRICE }
       await expectInvalidOpcode(tokenSale.buyTokens(1, params))
 
-      let balance = await getTokenBalance(proofToken, sender)
+      let balance = await getTokenBalance(Token, sender)
       balance.should.be.equal(initialBalance)
     })
 
     it('buying tokens should be possible if the contract is paused and unpaused', async function() {
-      let initialBalance = await getTokenBalance(proofToken, sender)
+      let initialBalance = await getTokenBalance(Token, sender)
 
       await buyTokens(tokenSale, sender, 1 * ether)
       await pause(tokenSale, fund)
       await unpause(tokenSale, fund)
       await buyTokens(tokenSale, sender, 1 * ether)
 
-      let balance = await getTokenBalance(proofToken, sender)
-      let balanceIncrease = await baseUnits(proofToken, balance - initialBalance)
+      let balance = await getTokenBalance(Token, sender)
+      let balanceIncrease = await baseUnits(Token, balance - initialBalance)
       expect(balanceIncrease).to.almost.equal(26.737967914)
     })
   })

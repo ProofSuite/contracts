@@ -5,12 +5,12 @@ module.exports = async function (callback) {
       require('./jsHelpers.js')
 
       const Web3 = require('web3')
-      const ProofToken = artifacts.require('./ProofToken.sol')
+      const Token = artifacts.require('./Token.sol')
       const provider = artifacts.options.provider
       const web3 = new Web3(provider)
       const config = require('../config')
 
-      let proofToken
+      let Token
       let sender
 
       web3.eth.getAccounts(function(error,result) {
@@ -20,8 +20,8 @@ module.exports = async function (callback) {
       })
 
       const run = async function(sender) {
-        proofToken = await ProofToken.deployed()
-        let txn = await proofToken.lockPresaleBalances({ from: sender, gas: config.constants.DEFAULT_GAS, gasPrice: config.constants.DEFAULT_HIGH_GAS_PRICE })
+        Token = await Token.deployed()
+        let txn = await Token.lockPresaleBalances({ from: sender, gas: config.constants.DEFAULT_GAS, gasPrice: config.constants.DEFAULT_HIGH_GAS_PRICE })
       }
     }
 
